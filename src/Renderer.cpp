@@ -212,7 +212,7 @@ void Renderer::addWavefront(const char* fileName, glm::mat4 matrix)
                     sceneNode.startPosition = startPosition;
                     startPosition += sceneNode.vertexDataSize;
                     sceneNode.endPosition = sceneNode.startPosition + sceneNode.vertexDataSize;
-                    sceneNode.primativeMode = GL_TRIANGLES;
+                    sceneNode.primitiveMode = GL_TRIANGLES;
                     sceneNode.diffuseTextureId = 0;
                     sceneNode.modelViewMatrix = matrix;
                     addSceneNode(&sceneNode);
@@ -252,7 +252,7 @@ void Renderer::addWavefront(const char* fileName, glm::mat4 matrix)
                 sceneNode.startPosition = startPosition;
                 sceneNode.endPosition = sceneNode.startPosition + sceneNode.vertexDataSize;
                 startPosition += sceneNode.vertexDataSize;
-                sceneNode.primativeMode = GL_TRIANGLES;
+                sceneNode.primitiveMode = GL_TRIANGLES;
                 sceneNode.diffuseTextureId = 0;
                 sceneNode.modelViewMatrix = matrix;
                 addSceneNode(&sceneNode);
@@ -503,7 +503,7 @@ void Renderer::render(Camera* camera)
             checkForGLError();
 #endif
 
-            glDrawRangeElementsBaseVertex(sceneNodes[i].primativeMode, sceneNodes[i].startPosition, sceneNodes[i].endPosition,
+            glDrawRangeElementsBaseVertex(sceneNodes[i].primitiveMode, sceneNodes[i].startPosition, sceneNodes[i].endPosition,
                     (sceneNodes[i].endPosition - sceneNodes[i].startPosition), GL_UNSIGNED_INT, (void*)(0), sceneNodes[i].startPosition);
         }
         else

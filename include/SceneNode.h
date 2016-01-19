@@ -17,7 +17,7 @@ typedef struct {
     glm::mat4 modelViewMatrix;
     GLuint startPosition;
     GLuint endPosition;
-    GLenum primativeMode;
+    GLenum primitiveMode;
 
     GLuint ambientTextureId;
     GLuint diffuseTextureId;
