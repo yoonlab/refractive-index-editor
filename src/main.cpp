@@ -237,6 +237,16 @@ public:
                 camera->moveLeft(deltaTime * speed);
             }
 
+			if (keys[SDL_SCANCODE_E])
+			{
+				camera->moveUpward(deltaTime * speed);
+			}
+
+			if (keys[SDL_SCANCODE_Q])
+			{
+				camera->moveDownward(deltaTime * speed);
+			}
+
             SDL_GetMouseState(&x, &y);
             xpos = (double) x;
             ypos = (double) y;
