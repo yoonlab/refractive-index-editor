@@ -62,6 +62,17 @@ void Camera::moveRight(double amount)
     position += scaledRight;
 }
 
+void Camera::moveUpward(double amount)
+{
+	glm::vec3 scaledUp = up * (float)amount;
+	position += scaledUp;
+}
+
+void Camera::moveDownward(double amount)
+{
+	moveUpward(-amount);
+}
+
 void Camera::update()
 {
     modelViewMatrix = glm::lookAt(

@@ -27,6 +27,8 @@ public:
     void moveBackward(double amount);
     void moveLeft(double amount);
     void moveRight(double amount);
+	void moveUpward(double amount);
+	void moveDownward(double amount);
     void update();
 };
 
