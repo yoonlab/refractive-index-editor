@@ -15,6 +15,8 @@ void errorMsg(const char* title)
 class MyGLApp
 {
 public:
+	enum Status { STATUS_AIM, STATUS_POINT, STATUS_MOVE };
+
     SDL_Window* window;
     Renderer renderer;
     Camera* camera;
@@ -29,6 +31,7 @@ public:
     double deltaTime;
     int runLevel;
     double lastTime;
+	Status currentStatus;
 
     MyGLApp()
     {
@@ -39,6 +42,7 @@ public:
         deltaTime = 0.0;
         window = 0;
         camera = 0;
+		currentStatus = STATUS_AIM;
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
         {
