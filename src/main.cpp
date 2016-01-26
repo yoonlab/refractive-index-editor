@@ -21,6 +21,9 @@ public:
     SDL_GLContext glContext;
     SDL_Event event;
 
+	int windowWidth = 1024;
+	int windowHeight = 768;
+
     double speed;
     double mouseSpeed;
     double deltaTime;
@@ -56,7 +59,7 @@ public:
             //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 4);
 
             Uint32 flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-            window = SDL_CreateWindow("", 10, 30, 800, 600, flags);
+            window = SDL_CreateWindow("", 10, 30, windowWidth, windowHeight, flags);
             if (window == NULL)
             {
                 fprintf(stderr, "Unable to create window: %s\n", SDL_GetError());
