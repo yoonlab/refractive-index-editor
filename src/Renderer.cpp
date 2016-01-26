@@ -209,6 +209,19 @@ void Renderer::addWavefront(const char* fileName, glm::mat4 matrix)
                     sceneNode.vertexDataSize = mVertexData.size();
                     sceneNode.vertexData = new Vertex[sceneNode.vertexDataSize];
                     memcpy((void*) sceneNode.vertexData, (void*) mVertexData.data(), sizeof(Vertex) * sceneNode.vertexDataSize);
+					btTriangleMesh *triMesh = new btTriangleMesh();
+					for (int k = 0; k < mVertexData.size() / 3; k += 3)
+					{
+						btVector3 vertex[3] =
+						{
+							btVector3(mVertexData[k].vertex[0], mVertexData[k].vertex[1], mVertexData[k].vertex[2]),
+							btVector3(mVertexData[k + 1].vertex[0], mVertexData[k + 1].vertex[1], mVertexData[k + 1].vertex[2]),
+							btVector3(mVertexData[k + 2].vertex[0], mVertexData[k + 2].vertex[1], mVertexData[k + 2].vertex[2])
+						};
+						triMesh->addTriangle(vertex[0], vertex[1], vertex[2]);
+					}
+					btBvhTriangleMeshShape *triColShape = new btBvhTriangleMeshShape(triMesh, true);
+					sceneNode.collisionShape = triColShape;
                     sceneNode.startPosition = startPosition;
                     startPosition += sceneNode.vertexDataSize;
                     sceneNode.endPosition = sceneNode.startPosition + sceneNode.vertexDataSize;
@@ -249,6 +262,19 @@ void Renderer::addWavefront(const char* fileName, glm::mat4 matrix)
                 sceneNode.vertexDataSize = mVertexData.size();
                 sceneNode.vertexData = new Vertex[sceneNode.vertexDataSize];
                 memcpy((void*) sceneNode.vertexData, (void*) mVertexData.data(), sizeof(Vertex) * sceneNode.vertexDataSize);
+				btTriangleMesh *triMesh = new btTriangleMesh();
+				for (int k = 0; k < mVertexData.size() / 3; k += 3)
+				{
+					btVector3 vertex[3] =
+					{
+						btVector3(mVertexData[k].vertex[0], mVertexData[k].vertex[1], mVertexData[k].vertex[2]),
+						btVector3(mVertexData[k + 1].vertex[0], mVertexData[k + 1].vertex[1], mVertexData[k + 1].vertex[2]),
+						btVector3(mVertexData[k + 2].vertex[0], mVertexData[k + 2].vertex[1], mVertexData[k + 2].vertex[2])
+					};
+					triMesh->addTriangle(vertex[0], vertex[1], vertex[2]);
+				}
+				btBvhTriangleMeshShape *triColShape = new btBvhTriangleMeshShape(triMesh, true);
+				sceneNode.collisionShape = triColShape;
                 sceneNode.startPosition = startPosition;
                 sceneNode.endPosition = sceneNode.startPosition + sceneNode.vertexDataSize;
                 startPosition += sceneNode.vertexDataSize;

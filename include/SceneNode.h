@@ -5,6 +5,8 @@
 #include "Material.h"
 #include "GpuProgram.h"
 
+#include <btBulletDynamicsCommon.h>
+
 typedef struct {
     float top, bottom, left, right, front, back;
 } BoundingBox;
@@ -26,6 +28,8 @@ typedef struct {
 
     GLfloat boundingSphere;
     GLfloat lx, ly, lz;
+
+	btCollisionShape *collisionShape;
 } SceneNode;
 
 BoundingBox* getBoundingBox(SceneNode*);
