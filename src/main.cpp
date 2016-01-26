@@ -19,6 +19,8 @@ public:
 
     SDL_Window* window;
     Renderer renderer;
+	Scene *scene;
+	PhysicsInterface *physInterface;
     Camera* camera;
     SDL_GLContext glContext;
     SDL_Event event;
@@ -146,8 +148,13 @@ public:
 
             camera = new Camera();
 
-            renderer.addWavefront("portland.obj", glm::translate(glm::mat4(1.f), glm::vec3(0.0,0.0, 0.0)));
-            renderer.buildScene();
+			scene = new Scene();
+			scene->addWavefront("portland.obj", glm::translate(glm::mat4(1.f), glm::vec3(0.0, 0.0, 0.0)));
+
+            renderer.glInitFromScene(scene);
+
+			physInterface = new PhysicsInterface();
+			physInterface->addCollisionObjectsFromScene(scene);
 
             GLint viewport[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
@@ -166,6 +173,7 @@ public:
     ~MyGLApp()
     {
         delete camera;
+		delete scene;
         SDL_GL_DeleteContext(glContext);
         SDL_DestroyWindow(window);
         SDL_Quit();
