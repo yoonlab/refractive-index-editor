@@ -221,7 +221,9 @@ void Renderer::addWavefront(const char* fileName, glm::mat4 matrix)
 						triMesh->addTriangle(vertex[0], vertex[1], vertex[2]);
 					}
 					btBvhTriangleMeshShape *triColShape = new btBvhTriangleMeshShape(triMesh, true);
-					sceneNode.collisionShape = triColShape;
+					btCollisionObject *colObj = new btCollisionObject();
+					colObj->setCollisionShape(triColShape);
+					sceneNode.collisionObject = colObj;
                     sceneNode.startPosition = startPosition;
                     startPosition += sceneNode.vertexDataSize;
                     sceneNode.endPosition = sceneNode.startPosition + sceneNode.vertexDataSize;
@@ -274,7 +276,9 @@ void Renderer::addWavefront(const char* fileName, glm::mat4 matrix)
 					triMesh->addTriangle(vertex[0], vertex[1], vertex[2]);
 				}
 				btBvhTriangleMeshShape *triColShape = new btBvhTriangleMeshShape(triMesh, true);
-				sceneNode.collisionShape = triColShape;
+				btCollisionObject *colObj = new btCollisionObject();
+				colObj->setCollisionShape(triColShape);
+				sceneNode.collisionObject = colObj;
                 sceneNode.startPosition = startPosition;
                 sceneNode.endPosition = sceneNode.startPosition + sceneNode.vertexDataSize;
                 startPosition += sceneNode.vertexDataSize;

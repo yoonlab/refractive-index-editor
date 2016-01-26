@@ -29,7 +29,7 @@ typedef struct {
     GLfloat boundingSphere;
     GLfloat lx, ly, lz;
 
-	btCollisionShape *collisionShape;
+	btCollisionObject *collisionObject;
 } SceneNode;
 
 BoundingBox* getBoundingBox(SceneNode*);
