@@ -3,12 +3,19 @@
 
 Scene::Scene()
 {
-	startPosition = 0;
 	isPrepared = false;
 }
 
 Scene::~Scene()
 {
+	for (auto sceneNode : sceneNodes)
+	{
+		delete sceneNode;
+	}
+	sceneNodes.clear();
+
+	textures.clear();
+	materials.clear();
 }
 
 void Scene::prepare()
@@ -17,63 +24,22 @@ void Scene::prepare()
 	{
 		for (int i = 0; i < sceneNodes.size(); i++)
 		{
-			if (materials.find(sceneNodes[i].material) == materials.end())
+			if (materials.find(sceneNodes[i]->getMaterialName()) == materials.end())
 			{
-				std::cerr << "Material " << sceneNodes[i].material << " was not loaded" << std::endl;
+				std::cerr << "Material " << sceneNodes[i]->getMaterialName() << " was not loaded" << std::endl;
 			}
 			else
 			{
-				if (strlen(materials[sceneNodes[i].material.c_str()].diffuseTexName) > 0)
-					addTexture(materials[sceneNodes[i].material.c_str()].diffuseTexName, sceneNodes[i].diffuseTextureId);
+				if (strlen(materials[sceneNodes[i]->getMaterialName().c_str()].diffuseTexName) > 0)
+					addTexture(materials[sceneNodes[i]->getMaterialName().c_str()].diffuseTexName, sceneNodes[i]->getDiffuseTextureIdPtr());
 			}
 		}
 
 		//Calculate Bounding Sphere radius
-		for (int i = 0; i < sceneNodes.size(); i++)
+		for (auto sceneNode : sceneNodes)
 		{
-			float lx = 0.f, ly = 0.f, lz = 0.f;
-			float r = 0.f;
-
-			int vertexDataSize = sceneNodes[i].vertexDataSize;
-			//Calculate local origin
-			for (int j = 0; j < vertexDataSize; j++)
-			{
-				lx += sceneNodes[i].vertexData[j].vertex[0];
-				ly += sceneNodes[i].vertexData[j].vertex[1];
-				lz += sceneNodes[i].vertexData[j].vertex[2];
-			}
-			lx /= (float)vertexDataSize;
-			ly /= (float)vertexDataSize;
-			lz /= (float)vertexDataSize;
-			sceneNodes[i].lx = lx;
-			sceneNodes[i].ly = ly;
-			sceneNodes[i].lz = lz;
-
-			for (int j = 0; j < sceneNodes[i].vertexDataSize; j++)
-			{
-				float x = sceneNodes[i].vertexData[j].vertex[0];
-				float y = sceneNodes[i].vertexData[j].vertex[1];
-				float z = sceneNodes[i].vertexData[j].vertex[2];
-
-				double nx = x - lx;
-				double ny = y - ly;
-				double nz = z - lz;
-
-				float r2 = sqrt(nx*nx + ny*ny + nz*nz);
-
-				if (r2 > r)
-				{
-					r = r2;
-				}
-				//std::cerr << "Boundingsphere for " << sceneNodes[i].name << " = " <<  r << std::endl;
-
-			}
-			if (r == 0)
-			{
-				//std::cerr << "Warning, bounding sphere radius = 0 for " << sceneNodes[i].name << std::endl;
-				r = 0.1f;
-			}
-			sceneNodes[i].boundingSphere = r;
+			sceneNode->calcBoundingSphere();
+			sceneNode->glInit();
 		}
 		isPrepared = true;
 	}
@@ -92,7 +58,7 @@ void Scene::addSceneNode(SceneNode* sceneNode)
 	}
 	else
 	{
-		sceneNodes.push_back(*sceneNode);
+		sceneNodes.push_back(sceneNode);
 	}
 }
 
@@ -109,7 +75,7 @@ bool hasEnding(std::string const &fullString, std::string const &ending)
 	}
 }
 
-void Scene::addTexture(const char* textureFileName, GLuint& textureId)
+void Scene::addTexture(const char* textureFileName, GLuint *textureId)
 {
 	std::string fileNameStr(TEXTURE_DIRECTORY);
 	fileNameStr += DIRECTORY_SEPARATOR;
@@ -135,8 +101,8 @@ void Scene::addTexture(const char* textureFileName, GLuint& textureId)
 
 	}
 
-	glGenTextures(1, &textureId);
-	glBindTexture(GL_TEXTURE_2D, textureId);
+	glGenTextures(1, textureId);
+	glBindTexture(GL_TEXTURE_2D, *textureId);
 
 	int mode = GL_RGB;
 
@@ -218,40 +184,21 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
 				if (materialId != lastMaterialId)
 				{
 					//new node
-					SceneNode sceneNode;
-					sceneNode.name = shapes[i].name.c_str();
-					sceneNode.material = materials[lastMaterialId].name.c_str();
-					sceneNode.vertexDataSize = mVertexData.size();
-					sceneNode.vertexData = new Vertex[sceneNode.vertexDataSize];
-					memcpy((void*)sceneNode.vertexData, (void*)mVertexData.data(), sizeof(Vertex) * sceneNode.vertexDataSize);
-					btTriangleMesh *triMesh = new btTriangleMesh();
-					for (int k = 0; k < mVertexData.size() / 3; k += 3)
-					{
-						btVector3 vertex[3] =
-						{
-							btVector3(mVertexData[k].vertex[0], mVertexData[k].vertex[1], mVertexData[k].vertex[2]),
-							btVector3(mVertexData[k + 1].vertex[0], mVertexData[k + 1].vertex[1], mVertexData[k + 1].vertex[2]),
-							btVector3(mVertexData[k + 2].vertex[0], mVertexData[k + 2].vertex[1], mVertexData[k + 2].vertex[2])
-						};
-						triMesh->addTriangle(vertex[0], vertex[1], vertex[2]);
-					}
-					btBvhTriangleMeshShape *triColShape = new btBvhTriangleMeshShape(triMesh, true);
-					btCollisionObject *colObj = new btCollisionObject();
-					colObj->setCollisionShape(triColShape);
-					sceneNode.collisionObject = colObj;
-					sceneNode.startPosition = startPosition;
-					startPosition += sceneNode.vertexDataSize;
-					sceneNode.endPosition = sceneNode.startPosition + sceneNode.vertexDataSize;
-					sceneNode.primitiveMode = GL_TRIANGLES;
-					sceneNode.diffuseTextureId = 0;
-					sceneNode.modelViewMatrix = modelMat;
-					addSceneNode(&sceneNode);
+					SceneNode *sceneNode = new SceneNode
+						(
+							&shapes[i].name,
+							&materials[lastMaterialId].name,
+							&mVertexData,
+							GL_TRIANGLES,
+							&modelMat
+						);
+					addSceneNode(sceneNode);
 					mVertexData.clear();
 				}
 			}
 
 			Vertex v;
-			memcpy((void*)& v.vertex, (void*)& shapes[i].mesh.positions[shapes[i].mesh.indices[j] * 3], sizeof(float) * 3);
+			memcpy((void*)& (v.position), (void*)& shapes[i].mesh.positions[shapes[i].mesh.indices[j] * 3], sizeof(float) * 3);
 
 			if ((shapes[i].mesh.indices[j] * 3) >= shapes[i].mesh.normals.size())
 			{
@@ -259,7 +206,7 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
 				return;
 			}
 
-			memcpy((void*)& v.normal, (void*)& shapes[i].mesh.normals[(shapes[i].mesh.indices[j] * 3)], sizeof(float) * 3);
+			memcpy((void*)& (v.normal), (void*)& shapes[i].mesh.normals[(shapes[i].mesh.indices[j] * 3)], sizeof(float) * 3);
 
 			if ((shapes[i].mesh.indices[j] * 2) >= shapes[i].mesh.texcoords.size())
 			{
@@ -273,34 +220,15 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
 			mVertexData.push_back(v);
 			if (j == shapes[i].mesh.indices.size() - 1)
 			{
-				SceneNode sceneNode;
-				sceneNode.name = shapes[i].name.c_str();
-				sceneNode.material = materials[materialId].name.c_str();
-				sceneNode.vertexDataSize = mVertexData.size();
-				sceneNode.vertexData = new Vertex[sceneNode.vertexDataSize];
-				memcpy((void*)sceneNode.vertexData, (void*)mVertexData.data(), sizeof(Vertex) * sceneNode.vertexDataSize);
-				btTriangleMesh *triMesh = new btTriangleMesh();
-				for (int k = 0; k < mVertexData.size() / 3; k += 3)
-				{
-					btVector3 vertex[3] =
-					{
-						btVector3(mVertexData[k].vertex[0], mVertexData[k].vertex[1], mVertexData[k].vertex[2]),
-						btVector3(mVertexData[k + 1].vertex[0], mVertexData[k + 1].vertex[1], mVertexData[k + 1].vertex[2]),
-						btVector3(mVertexData[k + 2].vertex[0], mVertexData[k + 2].vertex[1], mVertexData[k + 2].vertex[2])
-					};
-					triMesh->addTriangle(vertex[0], vertex[1], vertex[2]);
-				}
-				btBvhTriangleMeshShape *triColShape = new btBvhTriangleMeshShape(triMesh, true);
-				btCollisionObject *colObj = new btCollisionObject();
-				colObj->setCollisionShape(triColShape);
-				sceneNode.collisionObject = colObj;
-				sceneNode.startPosition = startPosition;
-				sceneNode.endPosition = sceneNode.startPosition + sceneNode.vertexDataSize;
-				startPosition += sceneNode.vertexDataSize;
-				sceneNode.primitiveMode = GL_TRIANGLES;
-				sceneNode.diffuseTextureId = 0;
-				sceneNode.modelViewMatrix = modelMat;
-				addSceneNode(&sceneNode);
+				SceneNode *sceneNode = new SceneNode
+					(
+						&shapes[i].name,
+						&materials[lastMaterialId].name,
+						&mVertexData,
+						GL_TRIANGLES,
+						&modelMat
+						);
+				addSceneNode(sceneNode);
 			}
 		}
 	}

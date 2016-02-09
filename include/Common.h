@@ -37,7 +37,7 @@
 #endif
 
 typedef struct {
-    GLfloat vertex[3];
+    GLfloat position[3];
     GLfloat normal[3];
     GLfloat textureCoordinate[2];
 } Vertex;

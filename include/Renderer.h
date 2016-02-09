@@ -26,7 +26,6 @@ public:
     void glInitFromScene(Scene *scene);
     void render(Camera*);
 private:
-    GLuint vao, vbo, ibo;
     glm::mat4 modelViewProjectionMatrix;
     GpuProgram *gpuProgram;
     std::vector<Vertex> vertexData;
