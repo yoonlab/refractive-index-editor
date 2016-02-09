@@ -42,14 +42,14 @@ void _checkForGLError(const char *file, int line)
 Renderer::Renderer()
 {
     gpuProgram = 0;
-	sceneToBeRendered = NULL;
+    sceneToBeRendered = NULL;
 }
 
 Renderer::~Renderer()
 {
-	if (gpuProgram != 0)
-		delete gpuProgram;
-	gpuProgram = 0;
+    if (gpuProgram != 0)
+        delete gpuProgram;
+    gpuProgram = 0;
 }
 
 // Used for debugging
@@ -69,10 +69,10 @@ void Renderer::glInitFromScene(Scene *scene)
         return;
     }
 
-	scene->prepare();
-	assert(scene->getIsPrepared());
+    scene->prepare();
+    assert(scene->getIsPrepared());
 
-	sceneToBeRendered = scene;
+    sceneToBeRendered = scene;
 
     gpuProgram = new GpuProgram();
 
@@ -122,7 +122,7 @@ void Renderer::render(Camera* camera)
         std::cout << "skipping render() on empty scene" << std::endl;
         return;
     }
-	assert(sceneToBeRendered->getIsPrepared());
+    assert(sceneToBeRendered->getIsPrepared());
 
     glm::vec3 lightPos = glm::vec3(10,135,0);
     //TODO: move uniforms to buffer object
@@ -137,57 +137,57 @@ void Renderer::render(Camera* camera)
     GLuint specularLocation = glGetUniformLocation(programID, "MaterialSpecular");
 
     frustum.extractFrustum(camera->modelViewMatrix, camera->projectionMatrix);
-	for (auto sceneNode : sceneToBeRendered->sceneNodes)
-	{
-		const glm::vec4 position = sceneNode->getBoundingSphereCenter();
-		if (frustum.spherePartiallyInFrustum(position.x, position.y, position.z, sceneNode->getBoundingSphereRadius()) > 0)
-		{
-			modelViewProjectionMatrix = camera->projectionMatrix * (camera->modelViewMatrix * sceneNode->getModelViewMatrix());
+    for (auto sceneNode : sceneToBeRendered->sceneNodes)
+    {
+        const glm::vec4 position = sceneNode->getBoundingSphereCenter();
+        if (frustum.spherePartiallyInFrustum(position.x, position.y, position.z, sceneNode->getBoundingSphereRadius()) > 0)
+        {
+            modelViewProjectionMatrix = camera->projectionMatrix * (camera->modelViewMatrix * sceneNode->getModelViewMatrix());
 #if _DEBUG
-			checkForGLError();
+            checkForGLError();
 #endif
-			glActiveTexture(GL_TEXTURE0);
+            glActiveTexture(GL_TEXTURE0);
 #if _DEBUG
-			checkForGLError();
+            checkForGLError();
 #endif
-			glBindTexture(GL_TEXTURE_2D, *sceneNode->getDiffuseTextureIdPtr());
+            glBindTexture(GL_TEXTURE_2D, *sceneNode->getDiffuseTextureIdPtr());
 #if _DEBUG
-			checkForGLError();
+            checkForGLError();
 #endif
 #if _DEBUG
-			checkForGLError();
+            checkForGLError();
 #endif
-			gpuProgram->use();
+            gpuProgram->use();
 #if _DEBUG
-			checkForGLError();
+            checkForGLError();
 #endif
-			glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
-			glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &camera->projectionMatrix[0][0]);
-			glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &camera->modelViewMatrix[0][0]);
+            glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
+            glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &camera->projectionMatrix[0][0]);
+            glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &camera->modelViewMatrix[0][0]);
 #if _DEBUG
-			checkForGLError();
+            checkForGLError();
 #endif
-			glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
-			glUniform3fv(ambientLocation, 1, sceneToBeRendered->materials[sceneNode->getMaterialName()].ambient);
-			glUniform3fv(diffuseLocation, 1, sceneToBeRendered->materials[sceneNode->getMaterialName()].diffuse);
-			glUniform3fv(specularLocation, 1, sceneToBeRendered->materials[sceneNode->getMaterialName()].specular);
+            glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+            glUniform3fv(ambientLocation, 1, sceneToBeRendered->materials[sceneNode->getMaterialName()].ambient);
+            glUniform3fv(diffuseLocation, 1, sceneToBeRendered->materials[sceneNode->getMaterialName()].diffuse);
+            glUniform3fv(specularLocation, 1, sceneToBeRendered->materials[sceneNode->getMaterialName()].specular);
 
-			glUniform1i(glGetUniformLocation(gpuProgram->getId(), "myTextureSampler"), 0);
+            glUniform1i(glGetUniformLocation(gpuProgram->getId(), "myTextureSampler"), 0);
 #if _DEBUG
-			checkForGLError();
+            checkForGLError();
 #endif
-			sceneNode->bindBuffers();
+            sceneNode->bindBuffers();
 #if _DEBUG
-			checkForGLError();
+            checkForGLError();
 #endif
-			glDrawArrays(sceneNode->getPrimitiveMode(), 0, sceneNode->getVertexLength());
-		}
-		else
-		{
-			//std::cerr << "Clipping " << sceneNodes[i].name << std::endl;
-		}
+            glDrawArrays(sceneNode->getPrimitiveMode(), 0, sceneNode->getVertexLength());
+        }
+        else
+        {
+            //std::cerr << "Clipping " << sceneNodes[i].name << std::endl;
+        }
 #if _DEBUG
-		checkForGLError();
+        checkForGLError();
 #endif
-	}
+    }
 }

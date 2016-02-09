@@ -1,3 +1,5 @@
+#define SDL_MAIN_HANDLED
+
 #include "Common.h"
 #include "SceneNode.h"
 #include "Renderer.h"
@@ -15,25 +17,25 @@ void errorMsg(const char* title)
 class MyGLApp
 {
 public:
-	enum Status { STATUS_AIM, STATUS_POINT, STATUS_MOVE };
+    enum Status { STATUS_AIM, STATUS_POINT, STATUS_MOVE };
 
     SDL_Window* window;
     Renderer renderer;
-	Scene *scene;
-	PhysicsInterface *physInterface;
+    Scene *scene;
+    PhysicsInterface *physInterface;
     Camera* camera;
     SDL_GLContext glContext;
     SDL_Event event;
 
-	int windowWidth = 1024;
-	int windowHeight = 768;
+    int windowWidth = 1024;
+    int windowHeight = 768;
 
     double speed;
     double mouseSpeed;
     double deltaTime;
     int runLevel;
     double lastTime;
-	Status currentStatus;
+    Status currentStatus;
 
     MyGLApp()
     {
@@ -44,7 +46,7 @@ public:
         deltaTime = 0.0;
         window = 0;
         camera = 0;
-		currentStatus = STATUS_AIM;
+        currentStatus = STATUS_AIM;
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
         {
@@ -148,13 +150,13 @@ public:
 
             camera = new Camera();
 
-			scene = new Scene();
-			scene->addWavefront("portland.obj", glm::translate(glm::mat4(1.f), glm::vec3(0.0, 0.0, 0.0)));
+            scene = new Scene();
+            scene->addWavefront("portland.obj", glm::translate(glm::mat4(1.f), glm::vec3(0.0, 0.0, 0.0)));
 
             renderer.glInitFromScene(scene);
 
-			physInterface = new PhysicsInterface();
-			physInterface->addCollisionObjectsFromScene(scene);
+            physInterface = new PhysicsInterface();
+            physInterface->addCollisionObjectsFromScene(scene);
 
             GLint viewport[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
@@ -173,7 +175,7 @@ public:
     ~MyGLApp()
     {
         delete camera;
-		delete scene;
+        delete scene;
         SDL_GL_DeleteContext(glContext);
         SDL_DestroyWindow(window);
         SDL_Quit();
@@ -252,15 +254,24 @@ public:
                 camera->moveLeft(deltaTime * speed);
             }
 
-			if (keys[SDL_SCANCODE_E])
-			{
-				camera->moveUpward(deltaTime * speed);
-			}
+            if (keys[SDL_SCANCODE_E])
+            {
+                camera->moveUpward(deltaTime * speed);
+            }
 
-			if (keys[SDL_SCANCODE_Q])
-			{
-				camera->moveDownward(deltaTime * speed);
-			}
+            if (keys[SDL_SCANCODE_Q])
+            {
+                camera->moveDownward(deltaTime * speed);
+            }
+
+            if (keys[SDL_SCANCODE_N])
+            {
+                btVector3 orig = btVector3(camera->position.x, camera->position.y, camera->position.z);
+                btVector3 dir = btVector3(camera->direction.x, camera->direction.y, camera->direction.z);
+                btVector3 point = physInterface->rayPick(orig, dir);
+                std::cout << "Shot from [" << orig.x() << ", " << orig.y() << ", " << orig.z() << "], "
+                    << "Hit [" << point.x() << ", " << point.y() << ", " << point.z() << "]" << std::endl;
+            }
 
             SDL_GetMouseState(&x, &y);
             xpos = (double) x;

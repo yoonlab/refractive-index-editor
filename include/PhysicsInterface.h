@@ -6,20 +6,20 @@
 class PhysicsInterface
 {
 public:
-	PhysicsInterface();
-	virtual ~PhysicsInterface();
+    PhysicsInterface();
+    virtual ~PhysicsInterface();
 
-	void addCollisionObject(btCollisionObject *obj);
-	void addCollisionObjectsFromScene(Scene *scene);
-	btVector3 rayPick(btVector3 &orig, btVector3 &dir);
+    void addCollisionObject(btCollisionObject *obj);
+    void addCollisionObjectsFromScene(Scene *scene);
+    btVector3 rayPick(btVector3 &orig, btVector3 &dir);
 
-	static btCollisionObject *createCollisionObjectFromVertices(const std::vector<Vertex> *vertexData);
+    static btCollisionObject *createCollisionObjectFromVertices(const std::vector<Vertex> *vertexData);
 
 private:
-	btCollisionConfiguration *config;
-	btCollisionDispatcher *dispatcher;
-	btBroadphaseInterface *broadphase;
-	btCollisionWorld *world;
+    btCollisionConfiguration *config;
+    btCollisionDispatcher *dispatcher;
+    btBroadphaseInterface *broadphase;
+    btCollisionWorld *world;
 
-	const float rayDist = 1000.0f;
+    const float rayDist = 1000.0f;
 };

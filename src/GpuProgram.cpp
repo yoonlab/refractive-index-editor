@@ -2,7 +2,7 @@
 
 GpuProgram::GpuProgram()
 {
-	id = glCreateProgram();
+    id = glCreateProgram();
 }
 
 GpuProgram::~GpuProgram()
@@ -12,15 +12,15 @@ GpuProgram::~GpuProgram()
 
 void GpuProgram::attachShader(Shader& _shader)
 {
-	glAttachShader(id, _shader.getId());
+    glAttachShader(id, _shader.getId());
 }
 
 GLuint GpuProgram::getId()
 {
-	return id;
+    return id;
 }
 
 void GpuProgram::use()
 {
-	glUseProgram(id);
+    glUseProgram(id);
 }

@@ -7,13 +7,13 @@
 class GpuProgram
 {
 public:
-	GpuProgram();
-	~GpuProgram();
-	GLuint getId();
-	void attachShader(Shader& _shader);
-	void use();
+    GpuProgram();
+    ~GpuProgram();
+    GLuint getId();
+    void attachShader(Shader& _shader);
+    void use();
 private:
-	GLuint id;
+    GLuint id;
 };
 
 #endif

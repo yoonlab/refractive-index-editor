@@ -31,7 +31,7 @@ private:
     std::vector<Vertex> vertexData;
     Frustum frustum;
     std::vector<GLuint> indices;
-	Scene *sceneToBeRendered;
+    Scene *sceneToBeRendered;
 };
 
 #endif
