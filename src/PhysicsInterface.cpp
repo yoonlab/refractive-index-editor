@@ -42,7 +42,7 @@ btVector3 PhysicsInterface::rayPick(btVector3 &orig, btVector3 &dir)
 btCollisionObject * PhysicsInterface::createCollisionObjectFromVertices(const std::vector<Vertex> *vertexData)
 {
     btTriangleMesh *triMesh = new btTriangleMesh();
-    for (int k = 0; k < vertexData->size() / 3; k += 3)
+    for (int k = 0; k < vertexData->size(); k += 3)
     {
         btVector3 position[3] =
         {
