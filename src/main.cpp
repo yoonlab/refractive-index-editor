@@ -233,35 +233,101 @@ public:
 
             const Uint8 *keys = SDL_GetKeyboardState(NULL);
 
+            Uint32 mouseButtonState = SDL_GetMouseState(&x, &y);
+            xpos = (double)x;
+            ypos = (double)y;
 
-            if ( keys[SDL_SCANCODE_W] )
-            {
-                camera->moveForward(deltaTime * speed);
-            }
+            double currentTime = SDL_GetTicks();
 
-            if(keys[SDL_SCANCODE_S])
+            switch (currentStatus)
             {
-                camera->moveBackward(deltaTime * speed);
-            }
+            case STATUS_AIM:
+                if (keys[SDL_SCANCODE_W])
+                {
+                    camera->moveForward(deltaTime * speed);
+                }
 
-            if(keys[SDL_SCANCODE_D])
-            {
-                camera->moveRight(deltaTime * speed);
-            }
+                if (keys[SDL_SCANCODE_S])
+                {
+                    camera->moveBackward(deltaTime * speed);
+                }
 
-            if(keys[SDL_SCANCODE_A])
-            {
-                camera->moveLeft(deltaTime * speed);
-            }
+                if (keys[SDL_SCANCODE_D])
+                {
+                    camera->moveRight(deltaTime * speed);
+                }
 
-            if (keys[SDL_SCANCODE_E])
-            {
-                camera->moveUpward(deltaTime * speed);
-            }
+                if (keys[SDL_SCANCODE_A])
+                {
+                    camera->moveLeft(deltaTime * speed);
+                }
 
-            if (keys[SDL_SCANCODE_Q])
-            {
-                camera->moveDownward(deltaTime * speed);
+                if (keys[SDL_SCANCODE_E])
+                {
+                    camera->moveUpward(deltaTime * speed);
+                }
+
+                if (keys[SDL_SCANCODE_Q])
+                {
+                    camera->moveDownward(deltaTime * speed);
+                }
+
+                if (keys[SDL_SCANCODE_SPACE])
+                {
+                    currentStatus = STATUS_POINT;
+                    SDL_ShowCursor(SDL_ENABLE);
+                }
+
+                /* Ignore mouse input less than 2 pixels from origin (smoothing) */
+                if (abs(x - (int)floor(viewport[2] / 2.0)) < 2)
+                    x = (int)floor(viewport[2] / 2.0);
+                if (abs(y - (int)floor(viewport[3] / 2.0)) < 2)
+                    y = (int)floor(viewport[3] / 2.0);
+
+                xpos = (double)x;
+                ypos = (double)y;
+
+                SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
+                SDL_WarpMouseInWindow(window, (int)(width / 2.0), (int)(height / 2.0));
+                SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
+
+                // Compute time difference between current and last frame
+                deltaTime = currentTime - lastTime;
+                lastTime = currentTime;
+
+                camera->aim(
+                    mouseSpeed * (floor(width / 2.0) - xpos),
+                    mouseSpeed * (floor(height / 2.0) - ypos)
+                    );
+
+                break;
+            case STATUS_POINT:
+                if (mouseButtonState & SDL_BUTTON(SDL_BUTTON_LEFT))
+                {
+                    glm::mat4 invProjMat = glm::inverse(camera->projectionMatrix);
+                    glm::mat4 invMVMat = glm::inverse(camera->modelViewMatrix);
+                    glm::vec4 onScreenVector = glm::vec4((2.0 * xpos)/width - 1.0f, 1.0f - (2.0 * ypos) / height, -1.f, 1.f);
+                    glm::vec4 rayView = invProjMat * onScreenVector;
+                    rayView = glm::vec4(rayView.x, rayView.y, -1.f, 0.f);
+                    glm::vec4 rayWorld = invMVMat * rayView;
+                    glm::vec3 rayWorld3 = glm::normalize(glm::vec3(rayWorld.x, rayWorld.y, rayWorld.z));
+                    btVector3 orig = btVector3(camera->position.x, camera->position.y, camera->position.z);
+                    btVector3 dir = btVector3(rayWorld3.x, rayWorld3.y, rayWorld3.z);
+                    btVector3 point = physInterface->rayPick(orig, dir);
+                    if (orig.x() == point.x() && orig.y() == point.y() && orig.z() == point.z())
+                    {
+                        std::cout << "Missed." << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Shot from [" << orig.x() << ", " << orig.y() << ", " << orig.z() << "], "
+                            << "Hit [" << point.x() << ", " << point.y() << ", " << point.z() << "]" << std::endl;
+                    }
+                }
+                break;
+            case STATUS_MOVE:
+
+                break;
             }
 
             if (keys[SDL_SCANCODE_N])
@@ -269,36 +335,16 @@ public:
                 btVector3 orig = btVector3(camera->position.x, camera->position.y, camera->position.z);
                 btVector3 dir = btVector3(camera->direction.x, camera->direction.y, camera->direction.z);
                 btVector3 point = physInterface->rayPick(orig, dir);
-                std::cout << "Shot from [" << orig.x() << ", " << orig.y() << ", " << orig.z() << "], "
-                    << "Hit [" << point.x() << ", " << point.y() << ", " << point.z() << "]" << std::endl;
+                if (orig.x() == point.x() && orig.y() == point.y() && orig.z() == point.z())
+                {
+                    std::cout << "Missed." << std::endl;
+                }
+                else
+                {
+                    std::cout << "Shot from [" << orig.x() << ", " << orig.y() << ", " << orig.z() << "], "
+                        << "Hit [" << point.x() << ", " << point.y() << ", " << point.z() << "]" << std::endl;
+                }
             }
-
-            SDL_GetMouseState(&x, &y);
-            xpos = (double) x;
-            ypos = (double) y;
-
-            /* Ignore mouse input less than 2 pixels from origin (smoothing) */
-            if (abs(x - (int) floor(viewport[2] / 2.0)) < 2)
-                x = (int) floor(viewport[2] / 2.0);
-            if (abs(y - (int) floor(viewport[3] / 2.0)) < 2)
-                y = (int) floor(viewport[3] / 2.0);
-
-            xpos = (double) x;
-            ypos = (double) y;
-
-            SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
-            SDL_WarpMouseInWindow(window, (int) (width / 2.0), (int) (height / 2.0));
-            SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
-
-            // Compute time difference between current and last frame
-            double currentTime = SDL_GetTicks();
-            deltaTime = currentTime - lastTime;
-            lastTime = currentTime;
-
-            camera->aim(
-                mouseSpeed * (floor(width / 2.0) - xpos),
-                mouseSpeed * (floor(height / 2.0) - ypos)
-            );
 
             camera->update();
 
