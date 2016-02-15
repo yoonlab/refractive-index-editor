@@ -20,7 +20,7 @@ void PhysicsInterface::addCollisionObject(btCollisionObject *obj)
 
 void PhysicsInterface::addCollisionObjectsFromScene(Scene *scene)
 {
-    for (auto node : scene->sceneNodes)
+    for (auto node : scene->texturedMeshes)
     {
         addCollisionObject(node->getCollisionObjectPtr());
     }

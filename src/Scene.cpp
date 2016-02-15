@@ -8,11 +8,11 @@ Scene::Scene()
 
 Scene::~Scene()
 {
-    for (auto sceneNode : sceneNodes)
+    for (auto sceneNode : texturedMeshes)
     {
         delete sceneNode;
     }
-    sceneNodes.clear();
+    texturedMeshes.clear();
 
     textures.clear();
     materials.clear();
@@ -22,21 +22,21 @@ void Scene::prepare()
 {
     if (!isPrepared)
     {
-        for (int i = 0; i < sceneNodes.size(); i++)
+        for (int i = 0; i < texturedMeshes.size(); i++)
         {
-            if (materials.find(sceneNodes[i]->getMaterialName()) == materials.end())
+            if (materials.find(texturedMeshes[i]->getMaterialName()) == materials.end())
             {
-                std::cerr << "Material " << sceneNodes[i]->getMaterialName() << " was not loaded" << std::endl;
+                std::cerr << "Material " << texturedMeshes[i]->getMaterialName() << " was not loaded" << std::endl;
             }
             else
             {
-                if (strlen(materials[sceneNodes[i]->getMaterialName().c_str()].diffuseTexName) > 0)
-                    addTexture(materials[sceneNodes[i]->getMaterialName().c_str()].diffuseTexName, sceneNodes[i]->getDiffuseTextureIdPtr());
+                if (strlen(materials[texturedMeshes[i]->getMaterialName().c_str()].diffuseTexName) > 0)
+                    addTexture(materials[texturedMeshes[i]->getMaterialName().c_str()].diffuseTexName, texturedMeshes[i]->getDiffuseTextureIdPtr());
             }
         }
 
         //Calculate Bounding Sphere radius
-        for (auto sceneNode : sceneNodes)
+        for (auto sceneNode : texturedMeshes)
         {
             sceneNode->calcBoundingSphere();
             sceneNode->glInit();
@@ -50,7 +50,7 @@ void Scene::addMaterial(Material* material)
     materials[material->name] = *material;
 }
 
-void Scene::addSceneNode(SceneNode* sceneNode)
+void Scene::addTexturedMesh(TexturedMesh* sceneNode)
 {
     if (!sceneNode)
     {
@@ -58,7 +58,7 @@ void Scene::addSceneNode(SceneNode* sceneNode)
     }
     else
     {
-        sceneNodes.push_back(sceneNode);
+        texturedMeshes.push_back(sceneNode);
     }
 }
 
@@ -184,7 +184,7 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
                 if (materialId != lastMaterialId)
                 {
                     //new node
-                    SceneNode *sceneNode = new SceneNode
+                    TexturedMesh *texMesh = new TexturedMesh
                         (
                             &shapes[i].name,
                             &materials[lastMaterialId].name,
@@ -192,7 +192,7 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
                             GL_TRIANGLES,
                             &modelMat
                         );
-                    addSceneNode(sceneNode);
+                    addTexturedMesh(texMesh);
                     mVertexData.clear();
                 }
             }
@@ -220,7 +220,7 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
             mVertexData.push_back(v);
             if (j == shapes[i].mesh.indices.size() - 1)
             {
-                SceneNode *sceneNode = new SceneNode
+                TexturedMesh *texMesh = new TexturedMesh
                     (
                         &shapes[i].name,
                         &materials[lastMaterialId].name,
@@ -228,7 +228,7 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
                         GL_TRIANGLES,
                         &modelMat
                         );
-                addSceneNode(sceneNode);
+                addTexturedMesh(texMesh);
             }
         }
     }
