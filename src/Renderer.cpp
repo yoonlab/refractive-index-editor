@@ -143,50 +143,27 @@ void Renderer::render(Camera* camera)
         if (frustum.spherePartiallyInFrustum(position.x, position.y, position.z, texMesh->getBoundingSphereRadius()) > 0)
         {
             modelViewProjectionMatrix = camera->projectionMatrix * (camera->modelViewMatrix * texMesh->getModelViewMatrix());
-#if _DEBUG
-            checkForGLError();
-#endif
+
             glActiveTexture(GL_TEXTURE0);
-#if _DEBUG
-            checkForGLError();
-#endif
             glBindTexture(GL_TEXTURE_2D, *texMesh->getDiffuseTextureIdPtr());
-#if _DEBUG
-            checkForGLError();
-#endif
-#if _DEBUG
-            checkForGLError();
-#endif
+
             gpuProgram->use();
-#if _DEBUG
-            checkForGLError();
-#endif
+
             glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
             glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &camera->projectionMatrix[0][0]);
             glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &camera->modelViewMatrix[0][0]);
-#if _DEBUG
-            checkForGLError();
-#endif
+
             glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
             glUniform3fv(ambientLocation, 1, sceneToBeRendered->materials[texMesh->getMaterialName()].ambient);
             glUniform3fv(diffuseLocation, 1, sceneToBeRendered->materials[texMesh->getMaterialName()].diffuse);
             glUniform3fv(specularLocation, 1, sceneToBeRendered->materials[texMesh->getMaterialName()].specular);
 
             glUniform1i(glGetUniformLocation(gpuProgram->getId(), "myTextureSampler"), 0);
-#if _DEBUG
-            checkForGLError();
-#endif
             texMesh->draw();
-#if _DEBUG
-            checkForGLError();
-#endif
         }
         else
         {
             //std::cerr << "Clipping " << texMesh.name << std::endl;
         }
-#if _DEBUG
-        checkForGLError();
-#endif
     }
 }
