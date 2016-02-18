@@ -28,7 +28,6 @@ public:
 private:
     glm::mat4 modelViewProjectionMatrix;
     GpuProgram *gpuProgram;
-    std::vector<Vertex> vertexData;
     Frustum frustum;
     std::vector<GLuint> indices;
     Scene *sceneToBeRendered;
