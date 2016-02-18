@@ -1,8 +1,8 @@
 #include "Shader.h"
 
-void FragmentShader::createFragmentShader()
+void Shader::createShader(GLenum type)
 {
-    id = glCreateShader(GL_FRAGMENT_SHADER);
+    id = glCreateShader(type);
     const char* src = shaderSrc.c_str();
     glShaderSource(id, 1, &src, 0);
     glCompileShader(id);
@@ -10,11 +10,11 @@ void FragmentShader::createFragmentShader()
 
     glGetShaderiv(id, GL_COMPILE_STATUS, &shaderCompiled);
 
-    if(shaderCompiled == GL_FALSE)
+    if (shaderCompiled == GL_FALSE)
     {
         int infologLength = 0;
 
-        int charsWritten  = 0;
+        int charsWritten = 0;
         char *infoLog;
 
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &infologLength);
@@ -30,35 +30,19 @@ void FragmentShader::createFragmentShader()
     }
 }
 
+void FragmentShader::createFragmentShader()
+{
+    createShader(GL_FRAGMENT_SHADER);
+}
+
 void VertexShader::createVertexShader()
 {
-    id = glCreateShader(GL_VERTEX_SHADER);
-    const char* src = shaderSrc.c_str();
-    glShaderSource(id, 1, &src, 0);
-    glCompileShader(id);
-    GLint shaderCompiled;
+    createShader(GL_VERTEX_SHADER);
+}
 
-    glGetShaderiv(id, GL_COMPILE_STATUS, &shaderCompiled);
-
-    if(shaderCompiled == GL_FALSE)
-    {
-        int infologLength = 0;
-
-        int charsWritten  = 0;
-        char *infoLog;
-
-        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &infologLength);
-        std::string log = "";
-        if (infologLength > 0)
-        {
-            infoLog = (char *)malloc(infologLength);
-            glGetShaderInfoLog(id, infologLength, &charsWritten, infoLog);
-            log = infoLog;
-            free(infoLog);
-        }
-        std::cerr << "The shader " << filePath << " failed to compile: " << log << std::endl;
-
-    }
+void GeometryShader::createGeometryShader()
+{
+    createShader(GL_GEOMETRY_SHADER);
 }
 
 void Shader::load(const char* _filePath)
@@ -137,6 +121,23 @@ VertexShader::VertexShader(std::string& _filePath) : Shader(_filePath.c_str())
 }
 
 VertexShader::~VertexShader()
+{
+
+}
+
+GeometryShader::GeometryShader(const char* _filePath)
+{
+    load(_filePath);
+    createGeometryShader();
+}
+
+GeometryShader::GeometryShader(std::string& _filePath) : Shader(_filePath.c_str())
+{
+    load(_filePath.c_str());
+    createGeometryShader();
+}
+
+GeometryShader::~GeometryShader()
 {
 
 }

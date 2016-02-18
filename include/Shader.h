@@ -13,6 +13,8 @@ public:
     void load(const char* _filePath);
     GLuint getId();
 protected:
+    void createShader(GLenum type);
+
     GLuint id;
     const char* filePath;
     std::string shaderSrc;
@@ -36,6 +38,16 @@ public:
     ~VertexShader();
 protected:
     void createVertexShader();
+};
+
+class GeometryShader : public Shader
+{
+public:
+    GeometryShader(const char *_filePath);
+    GeometryShader(std::string &_filePath);
+    ~GeometryShader();
+protected:
+    void createGeometryShader();
 };
 
 #endif
