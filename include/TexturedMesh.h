@@ -16,7 +16,7 @@ class TexturedMesh : public SceneNode
 public:
     TexturedMesh(const std::string *name,
         const std::string *material,
-        std::vector<Vertex> *vertexData,
+        std::vector<PosNormTexCoordVertex> *vertexData,
         GLenum primitiveMode,
         glm::mat4 *modelViewMatrix);
     virtual ~TexturedMesh();
@@ -31,12 +31,11 @@ public:
     GLuint *getDiffuseTextureIdPtr() { return &diffuseTextureId; }
     const glm::vec4 getBoundingSphereCenter() { return glm::vec4(lx, ly, lz, 1.f); }
     const GLfloat getBoundingSphereRadius() { return boundingSphere; }
-    const GLuint getVertexLength() { return vertexData.size(); }
     btCollisionObject *getCollisionObjectPtr() { return collisionObject; }
 
 protected:
     std::string material;
-    std::vector<Vertex> vertexData;
+    std::vector<PosNormTexCoordVertex> vertexData;
     std::vector<GLuint> indices;
 
     GLuint ambientTextureId;

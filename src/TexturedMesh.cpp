@@ -3,14 +3,14 @@
 
 TexturedMesh::TexturedMesh(const std::string * name,
     const std::string * material,
-    std::vector<Vertex>* vertexData,
+    std::vector<PosNormTexCoordVertex>* vertexData,
     GLenum primitiveMode,
     glm::mat4 * modelViewMatrix)
     : SceneNode(name, primitiveMode, modelViewMatrix)
 {
     bbox = NULL;
     this->material = std::string(*material);
-    this->vertexData = std::vector<Vertex>(*vertexData);
+    this->vertexData = std::vector<PosNormTexCoordVertex>(*vertexData);
     this->collisionObject = PhysicsInterface::createCollisionObjectFromVertices(vertexData);
     this->diffuseTextureId = 0;
 }
@@ -85,13 +85,13 @@ void TexturedMesh::glInit()
     }
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertexData.size(), &vertexData[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(PosNormTexCoordVertex) * vertexData.size(), &vertexData[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);                       //send positions on pipe 0
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(PosNormTexCoordVertex), (void*)0);                       //send positions on pipe 0
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(float) * 3));       //send normals on pipe 1
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(PosNormTexCoordVertex), (void*)(sizeof(float) * 3));       //send normals on pipe 1
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(float) * 6));     //send colors on pipe 2
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(PosNormTexCoordVertex), (void*)(sizeof(float) * 6));     //send colors on pipe 2
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), &indices[0], GL_STATIC_DRAW);
     glBindVertexArray(0);

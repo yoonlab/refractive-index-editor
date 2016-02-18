@@ -53,7 +53,7 @@ Renderer::~Renderer()
 }
 
 // Used for debugging
-void printVertex(Vertex& v)
+void printVertex(PosNormTexCoordVertex& v)
 {
     std::cerr << "v " << v.position[0] << ", " << v.position[1] << ", " << v.position[2]
             << '\t' << " n " << v.normal[0] << ", " << v.normal[1] << ", " << v.normal[2]

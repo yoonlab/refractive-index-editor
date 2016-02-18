@@ -166,7 +166,7 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
 
     for (size_t i = 0; i < shapes.size(); i++)
     {
-        std::vector<Vertex> mVertexData;
+        std::vector<PosNormTexCoordVertex> mVertexData;
 
         unsigned int materialId, lastMaterialId = 0;
         if (shapes[i].mesh.material_ids.size() > 0)
@@ -197,7 +197,7 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
                 }
             }
 
-            Vertex v;
+            PosNormTexCoordVertex v;
             memcpy((void*)& (v.position), (void*)& shapes[i].mesh.positions[shapes[i].mesh.indices[j] * 3], sizeof(float) * 3);
 
             if ((shapes[i].mesh.indices[j] * 3) >= shapes[i].mesh.normals.size())

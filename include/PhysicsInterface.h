@@ -13,7 +13,7 @@ public:
     void addCollisionObjectsFromScene(Scene *scene);
     btVector3 rayPick(btVector3 &orig, btVector3 &dir);
 
-    static btCollisionObject *createCollisionObjectFromVertices(const std::vector<Vertex> *vertexData);
+    static btCollisionObject *createCollisionObjectFromVertices(const std::vector<PosNormTexCoordVertex> *vertexData);
 
 private:
     btCollisionConfiguration *config;
