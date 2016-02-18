@@ -27,7 +27,8 @@ public:
     void render(Camera*);
 private:
     glm::mat4 modelViewProjectionMatrix;
-    GpuProgram *gpuProgram;
+    GpuProgram *texMeshShaderProgram;
+    GpuProgram *ptIndicatorShaderProgram;
     Frustum frustum;
     std::vector<GLuint> indices;
     Scene *sceneToBeRendered;

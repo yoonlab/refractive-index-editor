@@ -41,15 +41,15 @@ void _checkForGLError(const char *file, int line)
 
 Renderer::Renderer()
 {
-    gpuProgram = 0;
+    texMeshShaderProgram = NULL;
+    ptIndicatorShaderProgram = NULL;
     sceneToBeRendered = NULL;
 }
 
 Renderer::~Renderer()
 {
-    if (gpuProgram != 0)
-        delete gpuProgram;
-    gpuProgram = 0;
+    if (texMeshShaderProgram != NULL) delete texMeshShaderProgram; texMeshShaderProgram = NULL;
+    if (ptIndicatorShaderProgram != NULL) delete ptIndicatorShaderProgram; ptIndicatorShaderProgram = NULL;
 }
 
 // Used for debugging
@@ -74,21 +74,21 @@ void Renderer::glInitFromScene(Scene *scene)
 
     sceneToBeRendered = scene;
 
-    gpuProgram = new GpuProgram();
+    texMeshShaderProgram = new GpuProgram();
 
     try
     {
         VertexShader vertShader("shaders/default.vert");
         FragmentShader fragShader("shaders/default.frag");
 
-        gpuProgram->attachShader(vertShader);
-        gpuProgram->attachShader(fragShader);
+        texMeshShaderProgram->attachShader(vertShader);
+        texMeshShaderProgram->attachShader(fragShader);
 
-        glLinkProgram(gpuProgram->getId());
+        glLinkProgram(texMeshShaderProgram->getId());
 
         // Check for link errors
         GLint result;
-        GLuint programId = gpuProgram->getId();
+        GLuint programId = texMeshShaderProgram->getId();
         glGetProgramiv(programId, GL_LINK_STATUS, &result);
         if(result == GL_FALSE)
         {
@@ -126,7 +126,7 @@ void Renderer::render(Camera* camera)
 
     glm::vec3 lightPos = glm::vec3(10,135,0);
     //TODO: move uniforms to buffer object
-    GLuint programID = gpuProgram->getId();
+    GLuint programID = texMeshShaderProgram->getId();
     // Get a handle for our "MVP" uniform
     GLuint MatrixID = glGetUniformLocation(programID, "MVP");
     GLuint ViewMatrixID = glGetUniformLocation(programID, "V");
@@ -147,7 +147,7 @@ void Renderer::render(Camera* camera)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, *texMesh->getDiffuseTextureIdPtr());
 
-            gpuProgram->use();
+            texMeshShaderProgram->use();
 
             glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
             glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &camera->projectionMatrix[0][0]);
@@ -158,7 +158,7 @@ void Renderer::render(Camera* camera)
             glUniform3fv(diffuseLocation, 1, sceneToBeRendered->materials[texMesh->getMaterialName()].diffuse);
             glUniform3fv(specularLocation, 1, sceneToBeRendered->materials[texMesh->getMaterialName()].specular);
 
-            glUniform1i(glGetUniformLocation(gpuProgram->getId(), "myTextureSampler"), 0);
+            glUniform1i(glGetUniformLocation(texMeshShaderProgram->getId(), "myTextureSampler"), 0);
             texMesh->draw();
         }
         else
