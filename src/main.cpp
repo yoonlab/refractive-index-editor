@@ -3,6 +3,7 @@
 #include "Common.h"
 #include "SceneNode.h"
 #include "Renderer.h"
+#include <husl/husl.h>
 
 void infoMsg(const char* msg)
 {
@@ -17,7 +18,7 @@ void errorMsg(const char* title)
 class MyGLApp
 {
 public:
-    enum Status { STATUS_AIM, STATUS_POINT, STATUS_MOVE };
+    enum Status { STATUS_AIM, STATUS_POINT, STATUS_MOVE, STATUS_MAX };
 
     SDL_Window* window;
     Renderer renderer;
@@ -36,8 +37,10 @@ public:
     int runLevel;
     double lastTime;
     Status currentStatus;
+    Status nextStatus[3] = { STATUS_POINT, STATUS_MOVE, STATUS_POINT };
 
-    std::vector<PosColorVertex> *points;
+    std::vector<std::pair<glm::vec3 *, glm::vec3 *>> *pointPairs;
+    std::vector<PosColorVertex> *coloredPoints;
 
     MyGLApp()
     {
@@ -49,7 +52,8 @@ public:
         window = 0;
         camera = 0;
         currentStatus = STATUS_AIM;
-        points = new std::vector<PosColorVertex>();
+        pointPairs = new std::vector<std::pair<glm::vec3 *, glm::vec3 *>>();
+        coloredPoints = new std::vector<PosColorVertex>();
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
         {
@@ -67,7 +71,7 @@ public:
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
             //Uncomment to enable antiailiasing/multisampling
-            //SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 4);
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 4);
 
             Uint32 flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
             window = SDL_CreateWindow("", 10, 30, windowWidth, windowHeight, flags);
@@ -196,7 +200,61 @@ public:
 
     void keyUp(SDL_Keycode& key)
     {
+        switch (key)
+        {
+        case SDLK_SPACE:
+            switch (currentStatus)
+            {
+            case STATUS_AIM:
+                currentStatus = nextStatus[(int)currentStatus];
+                SDL_ShowCursor(SDL_ENABLE);
+                break;
+            case STATUS_POINT:
+                if (!pointPairs->empty() && pointPairs->back().second == NULL)
+                {
+                    currentStatus = nextStatus[(int)currentStatus];
+                }
+                break;
+            case STATUS_MOVE:
+                if (pointPairs->back().second != NULL)
+                {
+                    currentStatus = nextStatus[(int)currentStatus];
+                }
+                break;
+            }
+            break;
+        case SDLK_RETURN:
+            if (currentStatus == STATUS_MOVE && pointPairs->back().second != NULL)
+            {
+                // Optimize!
+            }
+            break;
+        }
+    }
 
+    bool getHitPoint(double xpos, double ypos, double width, double height, glm::vec3 *hitPointOut)
+    {
+        glm::mat4 invProjMat = glm::inverse(camera->projectionMatrix);
+        glm::mat4 invMVMat = glm::inverse(camera->modelViewMatrix);
+        glm::vec4 onScreenVector = glm::vec4((2.0 * xpos) / width - 1.0f, 1.0f - (2.0 * ypos) / height, -1.f, 1.f);
+        glm::vec4 rayView = invProjMat * onScreenVector;
+        rayView = glm::vec4(rayView.x, rayView.y, -1.f, 0.f);
+        glm::vec4 rayWorld = invMVMat * rayView;
+        glm::vec3 rayWorld3 = glm::normalize(glm::vec3(rayWorld.x, rayWorld.y, rayWorld.z));
+        btVector3 orig = btVector3(camera->position.x, camera->position.y, camera->position.z);
+        btVector3 dir = btVector3(rayWorld3.x, rayWorld3.y, rayWorld3.z);
+        btVector3 point = physInterface->rayPick(orig, dir);
+        if (orig.x() == point.x() && orig.y() == point.y() && orig.z() == point.z())
+        {
+            return false;
+        }
+        else
+        {
+            hitPointOut->x = point.x();
+            hitPointOut->y = point.y();
+            hitPointOut->z = point.z();
+            return true;
+        }
     }
 
     void start()
@@ -211,9 +269,13 @@ public:
         double xpos, ypos;
         int x, y;
 
+        bool invalidatePointList;
+
         /* Get mouse position */
         while (runLevel > 0)
         {
+            invalidatePointList = false;
+
             SDL_PollEvent(&event);
 
             if(event.type == SDL_QUIT)
@@ -275,12 +337,6 @@ public:
                     camera->moveDownward(deltaTime * speed);
                 }
 
-                if (keys[SDL_SCANCODE_SPACE])
-                {
-                    currentStatus = STATUS_POINT;
-                    SDL_ShowCursor(SDL_ENABLE);
-                }
-
                 /* Ignore mouse input less than 2 pixels from origin (smoothing) */
                 if (abs(x - (int)floor(viewport[2] / 2.0)) < 2)
                     x = (int)floor(viewport[2] / 2.0);
@@ -307,40 +363,64 @@ public:
             case STATUS_POINT:
                 if (mouseButtonState & SDL_BUTTON(SDL_BUTTON_LEFT))
                 {
-                    glm::mat4 invProjMat = glm::inverse(camera->projectionMatrix);
-                    glm::mat4 invMVMat = glm::inverse(camera->modelViewMatrix);
-                    glm::vec4 onScreenVector = glm::vec4((2.0 * xpos)/width - 1.0f, 1.0f - (2.0 * ypos) / height, -1.f, 1.f);
-                    glm::vec4 rayView = invProjMat * onScreenVector;
-                    rayView = glm::vec4(rayView.x, rayView.y, -1.f, 0.f);
-                    glm::vec4 rayWorld = invMVMat * rayView;
-                    glm::vec3 rayWorld3 = glm::normalize(glm::vec3(rayWorld.x, rayWorld.y, rayWorld.z));
-                    btVector3 orig = btVector3(camera->position.x, camera->position.y, camera->position.z);
-                    btVector3 dir = btVector3(rayWorld3.x, rayWorld3.y, rayWorld3.z);
-                    btVector3 point = physInterface->rayPick(orig, dir);
-                    if (orig.x() == point.x() && orig.y() == point.y() && orig.z() == point.z())
+                    glm::vec3 *hitPoint = new glm::vec3();
+                    bool hit = getHitPoint(xpos, ypos, width, height, hitPoint);
+                    if (hit)
                     {
-                        std::cout << "Missed." << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << "Shot from [" << orig.x() << ", " << orig.y() << ", " << orig.z() << "], "
-                            << "Hit [" << point.x() << ", " << point.y() << ", " << point.z() << "]" << std::endl;
-                        glm::vec3 hitPoint = glm::vec3(point.x(), point.y(), point.z());
-                        PosColorVertex psv;
-                        psv.position[0] = hitPoint.x; psv.position[1] = hitPoint.y; psv.position[2] = hitPoint.z;
-                        psv.color[0] = 1.0f; psv.color[1] = 1.0f; psv.color[2] = 0.0f;
-                        if (points->size() > 0)
+                        if (pointPairs->empty() || pointPairs->back().second != NULL)
                         {
-                            points->pop_back();
+                            pointPairs->push_back(std::pair<glm::vec3 *, glm::vec3 *>(NULL, NULL));
                         }
-                        points->push_back(psv);
-                        scene->setPointsToBeShown(points);
+                        if (pointPairs->back().first != NULL) delete pointPairs->back().first;
+                        pointPairs->back().first = new glm::vec3(*hitPoint);
+                        invalidatePointList = true;
                     }
+                    delete hitPoint;
                 }
                 break;
             case STATUS_MOVE:
-
+                if (mouseButtonState & SDL_BUTTON(SDL_BUTTON_LEFT))
+                {
+                    glm::vec3 *hitPoint = new glm::vec3();
+                    bool hit = getHitPoint(xpos, ypos, width, height, hitPoint);
+                    if (hit)
+                    {
+                        if (pointPairs->back().second != NULL) delete pointPairs->back().second;
+                        pointPairs->back().second = new glm::vec3(*hitPoint);
+                        invalidatePointList = true;
+                    }
+                    delete hitPoint;
+                }
                 break;
+            }
+
+            if (invalidatePointList)
+            {
+                coloredPoints->clear();
+                int pairIdx = 0;
+                int pairNum = pointPairs->size();
+                for (auto pointPair : *pointPairs)
+                {
+                    PosColorVertex psv_1, psv_2;
+                    if (pointPair.first != NULL)
+                    {
+                        psv_1.position[0] = pointPair.first->x;
+                        psv_1.position[1] = pointPair.first->y;
+                        psv_1.position[2] = pointPair.first->z;
+                        HUSLtoRGB(&psv_1.color[0], &psv_1.color[1], &psv_1.color[2], 360.0 * pairIdx / pairNum, 100, 70);
+                        coloredPoints->push_back(psv_1);
+                    }
+                    if (pointPair.second != NULL)
+                    {
+                        psv_2.position[0] = pointPair.second->x;
+                        psv_2.position[1] = pointPair.second->y;
+                        psv_2.position[2] = pointPair.second->z;
+                        HUSLtoRGB(&psv_2.color[0], &psv_2.color[1], &psv_2.color[2], 360.0 * pairIdx / pairNum, 100, 50);
+                        coloredPoints->push_back(psv_2);
+                    }
+                    pairIdx++;
+                }
+                scene->setPointsToBeShown(coloredPoints);
             }
 
             if (keys[SDL_SCANCODE_N])

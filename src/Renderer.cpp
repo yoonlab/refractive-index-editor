@@ -174,6 +174,7 @@ void Renderer::render(Camera* camera)
     GLuint specularLocation = glGetUniformLocation(programID, "MaterialSpecular");
 
     frustum.extractFrustum(camera->modelViewMatrix, camera->projectionMatrix);
+    glEnable(GL_DEPTH_TEST);
     for (auto texMesh : sceneToBeRendered->texturedMeshes)
     {
         const glm::vec4 position = texMesh->getBoundingSphereCenter();
@@ -206,6 +207,7 @@ void Renderer::render(Camera* camera)
 
     if (sceneToBeRendered->pointIndicator != NULL)
     {
+        glDisable(GL_DEPTH_TEST);
         programID = ptIndicatorShaderProgram->getId();
         GLuint ProjectionMatrixID = glGetUniformLocation(programID, "ProjectionMatrix");
         ViewMatrixID = glGetUniformLocation(programID, "ViewMatrix");
