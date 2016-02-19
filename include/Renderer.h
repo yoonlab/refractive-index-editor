@@ -26,6 +26,8 @@ public:
     void glInitFromScene(Scene *scene);
     void render(Camera*);
 private:
+    void shaderInit();
+
     glm::mat4 modelViewProjectionMatrix;
     GpuProgram *texMeshShaderProgram;
     GpuProgram *ptIndicatorShaderProgram;

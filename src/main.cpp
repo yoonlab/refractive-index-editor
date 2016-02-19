@@ -322,6 +322,13 @@ public:
                     {
                         std::cout << "Shot from [" << orig.x() << ", " << orig.y() << ", " << orig.z() << "], "
                             << "Hit [" << point.x() << ", " << point.y() << ", " << point.z() << "]" << std::endl;
+                        glm::vec3 hitPoint = glm::vec3(point.x(), point.y(), point.z());
+                        std::vector<PosColorVertex> *points = new std::vector<PosColorVertex>();
+                        PosColorVertex psv;
+                        psv.position[0] = hitPoint.x; psv.position[1] = hitPoint.y; psv.position[2] = hitPoint.z;
+                        psv.color[0] = 1.0f; psv.color[1] = 1.0f; psv.color[2] = 0.0f;
+                        points->push_back(psv);
+                        scene->setPointsToBeShown(points);
                     }
                 }
                 break;

@@ -73,9 +73,17 @@ void Renderer::glInitFromScene(Scene *scene)
     assert(scene->getIsPrepared());
 
     sceneToBeRendered = scene;
+    shaderInit();
 
+    glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    checkForGLError();
+}
+
+void Renderer::shaderInit()
+{
     texMeshShaderProgram = new GpuProgram();
-
     try
     {
         VertexShader vertShader("shaders/default.vert");
@@ -90,29 +98,58 @@ void Renderer::glInitFromScene(Scene *scene)
         GLint result;
         GLuint programId = texMeshShaderProgram->getId();
         glGetProgramiv(programId, GL_LINK_STATUS, &result);
-        if(result == GL_FALSE)
+        if (result == GL_FALSE)
         {
             GLint length;
             char *log;
             // get the program info log
             glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &length);
-            log = (char*) malloc(length);
+            log = (char*)malloc(length);
             glGetProgramInfoLog(programId, length, &result, log);
             std::cout << "Unable to link shader: " << log << std::endl;
             free(log);
         }
         checkForGLError();
     }
-
     catch (std::exception& e)
     {
         std::cerr << "Unable to load shader: " << e.what() << std::endl;
     }
 
-    glBindVertexArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    checkForGLError();
+    ptIndicatorShaderProgram = new GpuProgram();
+    try
+    {
+        VertexShader vertShader("shaders/point.vert");
+        FragmentShader fragShader("shaders/point.frag");
+        GeometryShader geomShader("shaders/point.geom");
+
+        ptIndicatorShaderProgram->attachShader(vertShader);
+        ptIndicatorShaderProgram->attachShader(fragShader);
+        ptIndicatorShaderProgram->attachShader(geomShader);
+
+        glLinkProgram(ptIndicatorShaderProgram->getId());
+
+        // Check for link errors
+        GLint result;
+        GLuint programId = ptIndicatorShaderProgram->getId();
+        glGetProgramiv(programId, GL_LINK_STATUS, &result);
+        if (result == GL_FALSE)
+        {
+            GLint length;
+            char *log;
+            // get the program info log
+            glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &length);
+            log = (char*)malloc(length);
+            glGetProgramInfoLog(programId, length, &result, log);
+            std::cout << "Unable to link shader: " << log << std::endl;
+            free(log);
+        }
+        checkForGLError();
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << "Unable to load shader: " << e.what() << std::endl;
+    }
 }
 
 void Renderer::render(Camera* camera)
@@ -165,5 +202,16 @@ void Renderer::render(Camera* camera)
         {
             //std::cerr << "Clipping " << texMesh.name << std::endl;
         }
+    }
+
+    if (sceneToBeRendered->pointIndicator != NULL)
+    {
+        programID = ptIndicatorShaderProgram->getId();
+        GLuint ProjectionMatrixID = glGetUniformLocation(programID, "ProjectionMatrix");
+        ViewMatrixID = glGetUniformLocation(programID, "ViewMatrix");
+        ptIndicatorShaderProgram->use();
+        glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &camera->projectionMatrix[0][0]);
+        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &camera->modelViewMatrix[0][0]);
+        sceneToBeRendered->pointIndicator->draw();
     }
 }

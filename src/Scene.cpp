@@ -4,6 +4,7 @@
 Scene::Scene()
 {
     isPrepared = false;
+    pointIndicator = NULL;
 }
 
 Scene::~Scene()
@@ -13,6 +14,8 @@ Scene::~Scene()
         delete sceneNode;
     }
     texturedMeshes.clear();
+
+    if (pointIndicator != NULL) delete pointIndicator; pointIndicator = NULL;
 
     textures.clear();
     materials.clear();
@@ -231,5 +234,19 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
                 addTexturedMesh(texMesh);
             }
         }
+    }
+}
+
+void Scene::setPointsToBeShown(std::vector<PosColorVertex>* points)
+{
+    if (pointIndicator == NULL)
+    {
+        const std::string *name = new std::string("Point Indicator");
+        pointIndicator = new PointIndicator(name, points);
+        delete name;
+    }
+    else
+    {
+        pointIndicator->updateVertices(points);
     }
 }
