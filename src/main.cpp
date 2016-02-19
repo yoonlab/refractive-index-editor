@@ -39,6 +39,7 @@ public:
     Status currentStatus;
     Status nextStatus[3] = { STATUS_POINT, STATUS_MOVE, STATUS_POINT };
 
+    bool invalidatePointList;
     std::vector<std::pair<glm::vec3 *, glm::vec3 *>> *pointPairs;
     std::vector<PosColorVertex> *coloredPoints;
 
@@ -54,6 +55,7 @@ public:
         currentStatus = STATUS_AIM;
         pointPairs = new std::vector<std::pair<glm::vec3 *, glm::vec3 *>>();
         coloredPoints = new std::vector<PosColorVertex>();
+        invalidatePointList = false;
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
         {
@@ -227,6 +229,15 @@ public:
             if (currentStatus == STATUS_MOVE && pointPairs->back().second != NULL)
             {
                 // Optimize!
+                if (invalidatePointList)
+                {
+                    for (auto pair : *pointPairs)
+                    {
+                        std::cout << "[(" << pair.first->x << ", " << pair.first->y << ", " << pair.first->z << "), (" <<
+                            pair.second->x << ", " << pair.second->y << ", " << pair.second->z << ")]" << std::endl;
+                    }
+                    invalidatePointList = false;
+                }
             }
             break;
         }
@@ -269,12 +280,12 @@ public:
         double xpos, ypos;
         int x, y;
 
-        bool invalidatePointList;
+        bool invalidateColoredPointList;
 
         /* Get mouse position */
         while (runLevel > 0)
         {
-            invalidatePointList = false;
+            invalidateColoredPointList = false;
 
             SDL_PollEvent(&event);
 
@@ -373,6 +384,7 @@ public:
                         }
                         if (pointPairs->back().first != NULL) delete pointPairs->back().first;
                         pointPairs->back().first = new glm::vec3(*hitPoint);
+                        invalidateColoredPointList = true;
                         invalidatePointList = true;
                     }
                     delete hitPoint;
@@ -387,6 +399,7 @@ public:
                     {
                         if (pointPairs->back().second != NULL) delete pointPairs->back().second;
                         pointPairs->back().second = new glm::vec3(*hitPoint);
+                        invalidateColoredPointList = true;
                         invalidatePointList = true;
                     }
                     delete hitPoint;
@@ -394,7 +407,7 @@ public:
                 break;
             }
 
-            if (invalidatePointList)
+            if (invalidateColoredPointList)
             {
                 coloredPoints->clear();
                 int pairIdx = 0;
