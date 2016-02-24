@@ -10,12 +10,12 @@ Linear::~Linear()
 {
 }
 
-double Linear::f(glm::vec3 p)
+double Linear::f(glm::dvec3 p)
 {
     return init + slope * glm::dot(p, direction);
 }
 
-glm::vec3 Linear::gradient(glm::vec3 p)
+glm::dvec3 Linear::gradient(glm::dvec3 p)
 {
     return direction;
 }
