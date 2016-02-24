@@ -38,6 +38,17 @@ void Lightpath::solve(double s_0, double step, double s_max, glm::dvec3 x_0, glm
     }
 }
 
+// Brute force
+double Lightpath::dist(glm::dvec3 p)
+{
+    double dist = INFINITY;
+    for (auto point : path)
+    {
+        dist = glm::min(dist, glm::length(point.second - p));
+    }
+    return dist;
+}
+
 // [Harris 1965; Born and Wolf 1999; Pomraning 2005]
 inline glm::dvec3 Lightpath::dwds(glm::dvec3 x, glm::dvec3 w)
 {
