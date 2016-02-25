@@ -3,6 +3,8 @@
 #include "Common.h"
 #include "SceneNode.h"
 #include "Renderer.h"
+#include "Linear.h"
+#include "Lightpath.h"
 #include <husl/husl.h>
 
 void infoMsg(const char* msg)
@@ -39,6 +41,9 @@ public:
     Status currentStatus;
     Status nextStatus[3] = { STATUS_POINT, STATUS_MOVE, STATUS_POINT };
 
+    Linear *linearMedium;
+    Lightpath *testLightpath;
+
     bool invalidatePointList;
     std::vector<std::pair<glm::vec3 *, glm::vec3 *>> *pointPairs;
     std::vector<PosColorVertex> *coloredPoints;
@@ -56,6 +61,8 @@ public:
         pointPairs = new std::vector<std::pair<glm::vec3 *, glm::vec3 *>>();
         coloredPoints = new std::vector<PosColorVertex>();
         invalidatePointList = false;
+        linearMedium = new Linear(glm::vec3(0, 1, 0), 0.01, 1.0);
+        testLightpath = new Lightpath(linearMedium);
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
         {
@@ -235,6 +242,15 @@ public:
                     {
                         std::cout << "[(" << pair.first->x << ", " << pair.first->y << ", " << pair.first->z << "), (" <<
                             pair.second->x << ", " << pair.second->y << ", " << pair.second->z << ")]" << std::endl;
+                        glm::dvec3 normalized = glm::normalize(*pair.second - camera->position);
+                        glm::dvec3 w = glm::dvec3(glm::acos(normalized.z), glm::atan(normalized.y, normalized.x), 1);
+                        testLightpath->solve2(0, 0.1, 100, camera->position, normalized);
+                        std::vector<PosColorVertex> *vertices = new std::vector<PosColorVertex>();
+                        testLightpath->getCurveVertices(vertices);
+                        const std::string *name = new std::string("Curve");
+                        Curve *curve = new Curve(name, vertices);
+                        delete name;
+                        scene->curves.push_back(curve);
                     }
                     invalidatePointList = false;
                 }
