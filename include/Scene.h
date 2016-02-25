@@ -3,6 +3,7 @@
 #include "Common.h"
 #include "TexturedMesh.h"
 #include "PointIndicator.h"
+#include "Curve.h"
 
 class Scene
 {
@@ -14,6 +15,7 @@ public:
     void prepare();
     std::vector<TexturedMesh *> texturedMeshes;
     PointIndicator *pointIndicator;
+    std::vector<Curve *> curves;
     std::map<std::string, Material> materials;
     std::map<std::string, SDL_Surface*> textures;
     const bool getIsPrepared() { return isPrepared; }

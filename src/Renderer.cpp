@@ -175,7 +175,7 @@ void Renderer::render(Camera* camera)
 
     frustum.extractFrustum(camera->modelViewMatrix, camera->projectionMatrix);
     glEnable(GL_DEPTH_TEST);
-    for (auto texMesh : sceneToBeRendered->texturedMeshes)
+    for (TexturedMesh *texMesh : sceneToBeRendered->texturedMeshes)
     {
         const glm::vec4 position = texMesh->getBoundingSphereCenter();
         if (frustum.spherePartiallyInFrustum(position.x, position.y, position.z, texMesh->getBoundingSphereRadius()) > 0)
@@ -215,5 +215,18 @@ void Renderer::render(Camera* camera)
         glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &camera->projectionMatrix[0][0]);
         glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &camera->modelViewMatrix[0][0]);
         sceneToBeRendered->pointIndicator->draw();
+    }
+
+    for (Curve *pCurve : sceneToBeRendered->curves)
+    {
+        // To be updated
+        glDisable(GL_DEPTH_TEST);
+        programID = ptIndicatorShaderProgram->getId();
+        GLuint ProjectionMatrixID = glGetUniformLocation(programID, "ProjectionMatrix");
+        ViewMatrixID = glGetUniformLocation(programID, "ViewMatrix");
+        ptIndicatorShaderProgram->use();
+        glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &camera->projectionMatrix[0][0]);
+        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &camera->modelViewMatrix[0][0]);
+        pCurve->draw();
     }
 }
