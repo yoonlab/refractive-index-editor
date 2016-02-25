@@ -17,5 +17,5 @@ double Linear::f(glm::dvec3 p)
 
 glm::dvec3 Linear::gradient(glm::dvec3 p)
 {
-    return direction;
+    return slope * direction;
 }
