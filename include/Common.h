@@ -35,16 +35,4 @@
 #else
     #define DIRECTORY_SEPARATOR "/"
 #endif
-
-typedef struct {
-    GLfloat position[3];
-    GLfloat normal[3];
-    GLfloat textureCoordinate[2];
-} PosNormTexCoordVertex;
-
-typedef struct {
-    GLfloat position[3];
-    GLfloat color[3];
-} PosColorVertex;
-
 #endif

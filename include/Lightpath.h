@@ -1,5 +1,6 @@
 #pragma once
 
+#include "VertexTypes.h"
 #include "Medium.h"
 #include <vector>
 

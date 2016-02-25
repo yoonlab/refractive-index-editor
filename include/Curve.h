@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.h"
+#include "VertexTypes.h"
 #include "GpuProgram.h"
 #include "SceneNode.h"
 
