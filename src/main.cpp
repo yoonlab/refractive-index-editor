@@ -39,10 +39,12 @@ public:
     int runLevel;
     double lastTime;
     Status currentStatus;
-    Status nextStatus[3] = { STATUS_POINT, STATUS_MOVE, STATUS_POINT };
+    Status nextStatus[3] = { STATUS_POINT, STATUS_MOVE, STATUS_AIM };
 
     Linear *linearMedium;
+    Linear *constMedium;
     Lightpath *testLightpath;
+    Lightpath *straightLightpath;
 
     bool invalidatePointList;
     std::vector<std::pair<glm::vec3 *, glm::vec3 *>> *pointPairs;
@@ -61,8 +63,11 @@ public:
         pointPairs = new std::vector<std::pair<glm::vec3 *, glm::vec3 *>>();
         coloredPoints = new std::vector<PosColorVertex>();
         invalidatePointList = false;
-        linearMedium = new Linear(glm::vec3(0, 1, 0), 0.01, 1.0);
+        linearMedium = new Linear(glm::vec3(0, 1, 0), -0.01, 1.2);
         testLightpath = new Lightpath(linearMedium);
+        constMedium = new Linear(glm::vec3(0, 1, 0), 0, 1.0);
+        straightLightpath = new Lightpath(constMedium);
+
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
         {
@@ -243,14 +248,19 @@ public:
                         std::cout << "[(" << pair.first->x << ", " << pair.first->y << ", " << pair.first->z << "), (" <<
                             pair.second->x << ", " << pair.second->y << ", " << pair.second->z << ")]" << std::endl;
                         glm::dvec3 normalized = glm::normalize(*pair.second - camera->position);
-                        glm::dvec3 w = glm::dvec3(glm::acos(normalized.z), glm::atan(normalized.y, normalized.x), 1);
-                        testLightpath->solve2(0, 0.1, 100, camera->position, normalized);
+                        testLightpath->solve2(0, 0.1, 50, camera->position, normalized);
+                        straightLightpath->solve2(0, 0.1, 50, camera->position, normalized);
                         std::vector<PosColorVertex> *vertices = new std::vector<PosColorVertex>();
                         testLightpath->getCurveVertices(vertices);
                         const std::string *name = new std::string("Curve");
                         Curve *curve = new Curve(name, vertices);
+                        straightLightpath->getCurveVertices(vertices);
+                        Curve *curve2 = new Curve(name, vertices);
                         delete name;
+                        curve->glInit();
+                        curve2->glInit();
                         scene->curves.push_back(curve);
+                        scene->curves.push_back(curve2);
                     }
                     invalidatePointList = false;
                 }

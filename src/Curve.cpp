@@ -3,7 +3,7 @@
 
 Curve::Curve(const std::string * name,
     std::vector<PosColorVertex> *vertexData)
-    : SceneNode(name, GL_LINE, &glm::mat4()),
+    : SceneNode(name, GL_POINTS, &glm::mat4()),
     isVertexAttribArrayEnabled(false)
 {
     this->vertexData = std::vector<PosColorVertex>(*vertexData);

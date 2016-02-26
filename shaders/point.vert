@@ -10,7 +10,7 @@ out vec4 gViewPosition;
 out vec4 gColor;
 out vec4 gBoundingBox;
 
-vec2 boundingBox = vec2(1.0, 1.0);
+vec2 boundingBox = vec2(0.1, 0.1);
 
 void main(void)
 {

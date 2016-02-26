@@ -220,7 +220,7 @@ void Renderer::render(Camera* camera)
     for (Curve *pCurve : sceneToBeRendered->curves)
     {
         // To be updated
-        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_DEPTH_TEST);
         programID = ptIndicatorShaderProgram->getId();
         GLuint ProjectionMatrixID = glGetUniformLocation(programID, "ProjectionMatrix");
         ViewMatrixID = glGetUniformLocation(programID, "ViewMatrix");
