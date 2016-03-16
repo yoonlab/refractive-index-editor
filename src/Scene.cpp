@@ -25,21 +25,21 @@ void Scene::prepare()
 {
     if (!isPrepared)
     {
-        for (int i = 0; i < texturedMeshes.size(); i++)
+        for (const auto &texturedMesh : texturedMeshes)
         {
-            if (materials.find(texturedMeshes[i]->getMaterialName()) == materials.end())
+            if (materials.find(texturedMesh->getMaterialName()) == materials.end())
             {
-                std::cerr << "Material " << texturedMeshes[i]->getMaterialName() << " was not loaded" << std::endl;
+                std::cerr << "Material " << texturedMesh->getMaterialName() << " was not loaded" << std::endl;
             }
             else
             {
-                if (strlen(materials[texturedMeshes[i]->getMaterialName().c_str()].diffuseTexName) > 0)
-                    addTexture(materials[texturedMeshes[i]->getMaterialName().c_str()].diffuseTexName, texturedMeshes[i]->getDiffuseTextureIdPtr());
+                if (strlen(materials[texturedMesh->getMaterialName().c_str()].diffuseTexName) > 0)
+                    addTexture(materials[texturedMesh->getMaterialName().c_str()].diffuseTexName, texturedMesh->getDiffuseTextureIdPtr());
             }
         }
 
         //Calculate Bounding Sphere radius
-        for (auto sceneNode : texturedMeshes)
+        for (const auto &sceneNode : texturedMeshes)
         {
             sceneNode->calcBoundingSphere();
             sceneNode->glInit();

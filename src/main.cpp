@@ -67,10 +67,9 @@ public:
         pointPairs = new std::vector<std::pair<glm::vec3 *, glm::vec3 *>>();
         coloredPoints = new std::vector<PosColorVertex>();
         invalidatePointList = false;
-        linearMedium = new Linear(glm::vec3(0, 1, 0), -0.01, 1.2);
+        linearMedium = new Linear(glm::vec3(0, 1, 0), 0.01, 1.0);
         constMedium = new Linear(glm::vec3(0, 1, 0), 0, 1.0);
         cost = new Cost();
-
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
         {
@@ -247,7 +246,7 @@ public:
                 if (invalidatePointList)
                 {
                     cost->paths.clear();
-                    for (auto pair : *pointPairs)
+                    for (const auto &pair : *pointPairs)
                     {
                         std::cout << "[(" << pair.first->x << ", " << pair.first->y << ", " << pair.first->z << "), (" <<
                             pair.second->x << ", " << pair.second->y << ", " << pair.second->z << ")]" << std::endl;
@@ -264,27 +263,23 @@ public:
                         straightLightpaths.push_back(straightLightpath);
 
                         std::vector<PosColorVertex> *vertices = new std::vector<PosColorVertex>();
-                        //testLightpath->getCurveVertices(vertices);
                         const std::string *name = new std::string("Curve");
-                        //Curve *curve = new Curve(name, vertices);
                         straightLightpath->getCurveVertices(vertices);
                         Curve *curve = new Curve(name, vertices);
                         delete name;
                         curve->glInit();
-                        //curve2->glInit();
                         scene->curves.push_back(curve);
-                        //scene->curves.push_back(curve2);
                     }
                     Optimizer::optimize(cost);
-                    for (auto const& testLightpath : testLightpaths)
+                    for (const auto &testLightpath : testLightpaths)
                     {
                         std::vector<PosColorVertex> *vertices = new std::vector<PosColorVertex>();
                         testLightpath->getCurveVertices(vertices);
                         const std::string *name = new std::string("Curve");
-                        Curve *curve2 = new Curve(name, vertices);
+                        Curve *curve = new Curve(name, vertices);
                         delete name;
-                        curve2->glInit();
-                        scene->curves.push_back(curve2);
+                        curve->glInit();
+                        scene->curves.push_back(curve);
                     }
                     invalidatePointList = false;
                 }
@@ -462,7 +457,7 @@ public:
                 coloredPoints->clear();
                 int pairIdx = 0;
                 int pairNum = pointPairs->size();
-                for (auto pointPair : *pointPairs)
+                for (auto const& pointPair : *pointPairs)
                 {
                     PosColorVertex psv_1, psv_2;
                     if (pointPair.first != NULL)

@@ -28,10 +28,10 @@ public:
     void glInit();
     void draw();
 
-    const std::string getMaterialName() { return material; }
+    const std::string getMaterialName() const { return material; }
     GLuint *getDiffuseTextureIdPtr() { return &diffuseTextureId; }
-    const glm::vec4 getBoundingSphereCenter() { return glm::vec4(lx, ly, lz, 1.f); }
-    const GLfloat getBoundingSphereRadius() { return boundingSphere; }
+    const glm::vec4 getBoundingSphereCenter() const { return glm::vec4(lx, ly, lz, 1.f); }
+    const GLfloat getBoundingSphereRadius() const { return boundingSphere; }
     btCollisionObject *getCollisionObjectPtr() { return collisionObject; }
 
 protected:

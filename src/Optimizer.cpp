@@ -44,7 +44,7 @@ double Cost_Dlib::operator()(const colVec & arg) const
 {
     std::vector<double *> *args = paths.at(0)->getMediumPtr()->arguments();
     int argCount = 0;
-    for (double *argPtr : *args)
+    for (const auto &argPtr : *args)
     {
         *argPtr = arg(argCount);
         argCount++;

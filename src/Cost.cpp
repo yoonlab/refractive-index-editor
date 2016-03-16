@@ -7,10 +7,10 @@ Cost::Cost()
 double Cost::cost() const
 {
     double sum = 0;
-    for (Lightpath *path : paths)
+    for (const auto &path : paths)
     {
         path->solve2();
-        sum += path->distToTarget();
+        sum += pow(path->distToTarget(), 2);
     }
     return sum;
 }

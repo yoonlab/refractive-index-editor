@@ -52,6 +52,7 @@ void Lightpath::solve2(double s_0, double step, double s_max, glm::dvec3 x_0, gl
     solve2();
 }
 
+// Solving numerically using RK4 for 2nd order ODE
 void Lightpath::solve2()
 {
     path.clear();
