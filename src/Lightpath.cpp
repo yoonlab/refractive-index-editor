@@ -43,6 +43,17 @@ void Lightpath::solve(double s_0, double step, double s_max, glm::dvec3 x_0, glm
 
 void Lightpath::solve2(double s_0, double step, double s_max, glm::dvec3 x_0, glm::dvec3 v_0)
 {
+    this->s_0 = s_0;
+    this->step = step;
+    this->s_max = s_max;
+    this->x_0 = x_0;
+    this->v_0 = v_0;
+
+    solve2();
+}
+
+void Lightpath::solve2()
+{
     path.clear();
 
     glm::dvec3 dx1, dx2, dx3, dx4, dv1, dv2, dv3, dv4, dx, dv;
@@ -50,9 +61,6 @@ void Lightpath::solve2(double s_0, double step, double s_max, glm::dvec3 x_0, gl
 
     x = x_0;
     v = v_0;
-
-    this->s_0 = s_0;
-    this->s_max = s_max;
 
     for (double s = s_0; s < s_max; s += step)
     {
@@ -70,7 +78,6 @@ void Lightpath::solve2(double s_0, double step, double s_max, glm::dvec3 x_0, gl
         x += dx;
         v += dv;
     }
-
 }
 
 // Brute force
@@ -82,6 +89,11 @@ double Lightpath::dist(glm::dvec3 p)
         dist = glm::min(dist, glm::length(point.second - p));
     }
     return dist;
+}
+
+double Lightpath::distToTarget()
+{
+    return dist(targetPoint);
 }
 
 void Lightpath::getCurveVertices(std::vector<PosColorVertex>* verticesOut)

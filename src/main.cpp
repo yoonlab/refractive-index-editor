@@ -5,6 +5,8 @@
 #include "Renderer.h"
 #include "Linear.h"
 #include "Lightpath.h"
+#include "Cost.h"
+#include "Optimizer.h"
 #include <husl/husl.h>
 
 void infoMsg(const char* msg)
@@ -43,12 +45,14 @@ public:
 
     Linear *linearMedium;
     Linear *constMedium;
-    Lightpath *testLightpath;
-    Lightpath *straightLightpath;
+    std::vector<Lightpath *>testLightpaths;
+    std::vector<Lightpath *>straightLightpaths;
 
     bool invalidatePointList;
     std::vector<std::pair<glm::vec3 *, glm::vec3 *>> *pointPairs;
     std::vector<PosColorVertex> *coloredPoints;
+
+    Cost *cost;
 
     MyGLApp()
     {
@@ -64,9 +68,8 @@ public:
         coloredPoints = new std::vector<PosColorVertex>();
         invalidatePointList = false;
         linearMedium = new Linear(glm::vec3(0, 1, 0), -0.01, 1.2);
-        testLightpath = new Lightpath(linearMedium);
         constMedium = new Linear(glm::vec3(0, 1, 0), 0, 1.0);
-        straightLightpath = new Lightpath(constMedium);
+        cost = new Cost();
 
 
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
@@ -243,23 +246,44 @@ public:
                 // Optimize!
                 if (invalidatePointList)
                 {
+                    cost->paths.clear();
                     for (auto pair : *pointPairs)
                     {
                         std::cout << "[(" << pair.first->x << ", " << pair.first->y << ", " << pair.first->z << "), (" <<
                             pair.second->x << ", " << pair.second->y << ", " << pair.second->z << ")]" << std::endl;
-                        glm::dvec3 normalized = glm::normalize(*pair.second - camera->position);
-                        testLightpath->solve2(0, 0.1, 50, camera->position, normalized);
-                        straightLightpath->solve2(0, 0.1, 50, camera->position, normalized);
+                        glm::dvec3 normalized = glm::normalize(*pair.first - camera->position);
+
+                        Lightpath *testLightpath = new Lightpath(linearMedium);
+                        testLightpath->solve2(0, 0.03, 50, camera->position, normalized);
+                        testLightpath->setTargetPoint(*pair.second);
+                        testLightpaths.push_back(testLightpath);
+                        cost->paths.push_back(testLightpath);
+
+                        Lightpath *straightLightpath = new Lightpath(constMedium);
+                        straightLightpath->solve2(0, 0.03, 50, camera->position, normalized);
+                        straightLightpaths.push_back(straightLightpath);
+
+                        std::vector<PosColorVertex> *vertices = new std::vector<PosColorVertex>();
+                        //testLightpath->getCurveVertices(vertices);
+                        const std::string *name = new std::string("Curve");
+                        //Curve *curve = new Curve(name, vertices);
+                        straightLightpath->getCurveVertices(vertices);
+                        Curve *curve = new Curve(name, vertices);
+                        delete name;
+                        curve->glInit();
+                        //curve2->glInit();
+                        scene->curves.push_back(curve);
+                        //scene->curves.push_back(curve2);
+                    }
+                    Optimizer::optimize(cost);
+                    for (auto const& testLightpath : testLightpaths)
+                    {
                         std::vector<PosColorVertex> *vertices = new std::vector<PosColorVertex>();
                         testLightpath->getCurveVertices(vertices);
                         const std::string *name = new std::string("Curve");
-                        Curve *curve = new Curve(name, vertices);
-                        straightLightpath->getCurveVertices(vertices);
                         Curve *curve2 = new Curve(name, vertices);
                         delete name;
-                        curve->glInit();
                         curve2->glInit();
-                        scene->curves.push_back(curve);
                         scene->curves.push_back(curve2);
                     }
                     invalidatePointList = false;
