@@ -10,7 +10,7 @@ double Cost::cost() const
     for (const auto &path : paths)
     {
         path->solve2();
-        sum += pow(path->distToTarget(), 2);
+        sum += pow(path->distToTarget(), 1);
     }
     return sum;
 }
