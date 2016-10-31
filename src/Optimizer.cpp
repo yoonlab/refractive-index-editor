@@ -7,6 +7,8 @@ void Optimizer::optimize(Cost * cost)
 {
     Medium *pMedium = cost->paths.at(0)->getMediumPtr();
     std::vector<double *> *args = pMedium->arguments();
+    std::vector<double> *arg_max = pMedium->arg_max();
+    std::vector<double> *arg_min = pMedium->arg_min();
     int size = args->size();
     colVec initVals(size);
     int argCount = 0;
@@ -25,10 +27,10 @@ void Optimizer::optimize(Cost * cost)
             (
                 *cost_dlib,
                 initVals,
-                9,
+                size * 2 + 1,
                 dlib::uniform_matrix<double>(size, 1, -1e100),
                 dlib::uniform_matrix<double>(size, 1, 1e100),
-                10,
+                100,
                 1e-6,
                 iterLimit
                 );
