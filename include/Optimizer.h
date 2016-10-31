@@ -9,7 +9,7 @@ static class Optimizer
 public:
     static void optimize(Cost *cost);
 protected:
-    static const int iterLimit = 1000;
+    static const int iterLimit = 512;
 };
 
 class Cost_Dlib : Cost

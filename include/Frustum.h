@@ -11,7 +11,7 @@ typedef struct
 class Frustum
 {
 public:
-    void extractFrustum(glm::mat4& modelViewMatrix, glm::mat4& projectionMatrix);
+    void extractFrustum(const glm::mat4& modelViewMatrix, const glm::mat4& projectionMatrix);
     bool pointInFrustum( float x, float y, float z );
     bool sphereInFrustum( float x, float y, float z, float radius );
     float sphereInFrustumDistance( float x, float y, float z, float radius );

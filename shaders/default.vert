@@ -17,10 +17,13 @@ out vec3 Normal_cameraspace;
 out vec3 EyeDirection_cameraspace;
 out vec3 LightDirection_cameraspace;
 out vec3 LightPosition_worldspace;
+out vec4 projPosition;
 
 void main(void) {
 
-	gl_Position= M * V * vec4(in_Position, 1.0);
+	projPosition = M * V * vec4(in_Position, 1.0);
+	gl_Position = projPosition;
+
 	 // Position of the vertex, in worldspace : M * position
 	Position_worldspace = (M * vec4(in_Position,1)).xyz;
 

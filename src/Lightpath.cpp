@@ -1,5 +1,6 @@
 #include "Lightpath.h"
 #include <glm/glm.hpp>
+#include <tuple>
 
 Lightpath::Lightpath(Medium *_pMedium) : pMedium(_pMedium)
 {
@@ -25,7 +26,7 @@ void Lightpath::solve(double s_0, double step, double s_max, glm::dvec3 x_0, glm
 
     for (double s = s_0; s < s_max; s += step)
     {
-        path.push_back(std::pair<double, glm::dvec3>(s, x));
+        path.push_back(std::tuple<double, glm::dvec3, glm::dvec3>(s, w, x));
         dx1 = step * w;
         dw1 = step * dwds(x, w);
         dx2 = step * (w + dw1 / 2.0);
@@ -65,7 +66,7 @@ void Lightpath::solve2()
 
     for (double s = s_0; s < s_max; s += step)
     {
-        path.push_back(std::pair<double, glm::dvec3>(s, x));
+        path.push_back(std::tuple<double, glm::dvec3, glm::dvec3>{s, v, x});
         dx1 = step * v / pMedium->f(x);
         dv1 = step * pMedium->gradient(x);
         dx2 = step * (v + dv1 / 2.0) / pMedium->f(x + dx1 / 2.0);
@@ -85,9 +86,9 @@ void Lightpath::solve2()
 double Lightpath::dist(glm::dvec3 p)
 {
     double dist = INFINITY;
-    for (auto point : path)
+    for (const auto &point : path)
     {
-        dist = glm::min(dist, glm::length(point.second - p));
+        dist = glm::min(dist, glm::length(std::get<2>(point) - p));
     }
     return dist;
 }
@@ -97,18 +98,21 @@ double Lightpath::distToTarget()
     return dist(targetPoint);
 }
 
-void Lightpath::getCurveVertices(std::vector<PosColorVertex>* verticesOut)
+void Lightpath::getCurveVertices(std::vector<PosColorVertex>* verticesOut, float r, float g, float b)
 {
     verticesOut->clear();
-    for (auto point : path)
+    for (const auto &point : path)
     {
         PosColorVertex v;
-        v.color[0] = 1.0f;
-        v.color[1] = 1.0f;
-        v.color[2] = (point.first - s_0) / (s_max - s_0);
-        v.position[0] = point.second.x;
-        v.position[1] = point.second.y;
-        v.position[2] = point.second.z;
+        //v.color[0] = 1.0f;
+        //v.color[1] = 1.0f;
+        //v.color[2] = (point.first - s_0) / (s_max - s_0);
+        v.color[0] = r;
+        v.color[1] = g;
+        v.color[2] = b;
+        v.position[0] = std::get<2>(point).x;
+        v.position[1] = std::get<2>(point).y;
+        v.position[2] = std::get<2>(point).z;
         verticesOut->push_back(v);
     }
 }

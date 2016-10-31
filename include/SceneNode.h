@@ -10,6 +10,8 @@ class SceneNode
 public:
     SceneNode();
     SceneNode(const std::string *name,
+        GLenum primitiveMode);
+    SceneNode(const std::string *name,
         GLenum primitiveMode,
         glm::mat4 *modelViewMatrix);
     virtual ~SceneNode();

@@ -4,10 +4,12 @@
 #include "SceneNode.h"
 #include "Renderer.h"
 #include "Linear.h"
+#include "TestModel.h"
 #include "Lightpath.h"
 #include "Cost.h"
 #include "Optimizer.h"
 #include <husl/husl.h>
+#include <chrono>
 
 void infoMsg(const char* msg)
 {
@@ -22,33 +24,40 @@ void errorMsg(const char* title)
 class MyGLApp
 {
 public:
-    enum Status { STATUS_AIM, STATUS_POINT, STATUS_MOVE, STATUS_MAX };
+    enum Status { STATUS_AIM, STATUS_SRCPTR, STATUS_DSTPTR, STATUS_VISUALIZE, STATUS_MAX };
 
     SDL_Window* window;
-    Renderer renderer;
     Scene *scene;
     PhysicsInterface *physInterface;
-    Camera* camera;
+    Camera camera;
+    Camera fixCam;
     SDL_GLContext glContext;
     SDL_Event event;
 
-    int windowWidth = 1024;
-    int windowHeight = 768;
+    int windowWidth = 1600;
+    int windowHeight = 900;
+
+    Renderer renderer = Renderer(windowWidth, windowHeight);
 
     double speed;
+    double acceleration;
     double mouseSpeed;
     double deltaTime;
     int runLevel;
     double lastTime;
     Status currentStatus;
-    Status nextStatus[3] = { STATUS_POINT, STATUS_MOVE, STATUS_AIM };
+    bool visRefraction;
+    bool visCurve;
+    bool visPoint;
 
+    TestModel *testMedium;
     Linear *linearMedium;
     Linear *constMedium;
     std::vector<Lightpath *>testLightpaths;
     std::vector<Lightpath *>straightLightpaths;
 
     bool invalidatePointList;
+    bool invalidateColoredPointList;
     std::vector<std::pair<glm::vec3 *, glm::vec3 *>> *pointPairs;
     std::vector<PosColorVertex> *coloredPoints;
 
@@ -57,20 +66,26 @@ public:
     MyGLApp()
     {
         speed = .008f;
+        acceleration = 1.f;
         mouseSpeed = 0.002f;
         runLevel = 1;
         lastTime = SDL_GetTicks();
         deltaTime = 0.0;
         window = 0;
-        camera = 0;
         currentStatus = STATUS_AIM;
         pointPairs = new std::vector<std::pair<glm::vec3 *, glm::vec3 *>>();
         coloredPoints = new std::vector<PosColorVertex>();
         invalidatePointList = false;
+        invalidateColoredPointList = false;
+        visRefraction = false;
+        visCurve = true;
+        visPoint = true;
+        testMedium = new TestModel(3, 1, 0.1, 1, 1, 0.1, 1, 10);
         linearMedium = new Linear(glm::vec3(0, 1, 0), 0.01, 1.0);
         constMedium = new Linear(glm::vec3(0, 1, 0), 0, 1.0);
         cost = new Cost();
 
+        
         if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
         {
             std::cerr << "Unable to initialize SDL: " << SDL_GetError() << std::endl;
@@ -159,35 +174,31 @@ public:
             checkForGLError();
 
             // Accept fragment if it closer to the camera than the former one
-            glDepthFunc(GL_LESS);
+            //glDepthFunc(GL_LESS);
 
             // Cull triangles which normal is not towards the camera
             // Enable only if faces all faces are drawn counter-clockwise
             //glEnable(GL_CULL_FACE);
 
             checkForGLError();
-            glClearColor(0.8, 0.8, 0.8, 1.0);
-            checkForGLError();
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            checkForGLError();
 
-            camera = new Camera();
+            camera = Camera();
 
             scene = new Scene();
-            scene->addWavefront("portland.obj", glm::translate(glm::mat4(1.f), glm::vec3(0.0, 0.0, 0.0)));
+            scene->addWavefront("portland2.obj", glm::translate(glm::mat4(1.f), glm::vec3(0.0, 0.0, 0.0)));
+
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+
+            double width = (double)viewport[2];
+            double height = (double)viewport[3];
+
+            glViewport(0, 0, viewport[2], viewport[3]);
 
             renderer.glInitFromScene(scene);
 
             physInterface = new PhysicsInterface();
             physInterface->addCollisionObjectsFromScene(scene);
-
-            GLint viewport[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
-
-            double width = (double) viewport[2];
-            double height = (double) viewport[3];
-
-            glViewport(0, 0, viewport[2], viewport[3]);
 
             SDL_EventState(SDL_MOUSEMOTION, SDL_IGNORE);
             SDL_WarpMouseInWindow(window, (int) (width / 2.0), (int) (height / 2.0));
@@ -197,7 +208,6 @@ public:
 
     ~MyGLApp()
     {
-        delete camera;
         delete scene;
         SDL_GL_DeleteContext(glContext);
         SDL_DestroyWindow(window);
@@ -222,64 +232,151 @@ public:
             switch (currentStatus)
             {
             case STATUS_AIM:
-                currentStatus = nextStatus[(int)currentStatus];
+                currentStatus = STATUS_SRCPTR;
+                fixCam = camera;
                 SDL_ShowCursor(SDL_ENABLE);
                 break;
-            case STATUS_POINT:
+            case STATUS_SRCPTR:
                 if (!pointPairs->empty() && pointPairs->back().second == NULL)
                 {
-                    currentStatus = nextStatus[(int)currentStatus];
+                    currentStatus = STATUS_DSTPTR;
                 }
                 break;
-            case STATUS_MOVE:
+            case STATUS_DSTPTR:
                 if (pointPairs->back().second != NULL)
                 {
-                    currentStatus = nextStatus[(int)currentStatus];
+                    currentStatus = STATUS_SRCPTR;
                 }
+                break;
+            default:
                 break;
             }
             break;
-        case SDLK_RETURN:
-            if (currentStatus == STATUS_MOVE && pointPairs->back().second != NULL)
+        case SDLK_BACKSPACE:
+            switch (currentStatus)
             {
+            case STATUS_AIM:
+                break;
+            case STATUS_SRCPTR:
+                if (!pointPairs->empty() && pointPairs->back().second == NULL)
+                {
+                    pointPairs->pop_back();
+                    if (pointPairs->empty())
+                    {
+                        currentStatus = STATUS_AIM;
+                        SDL_ShowCursor(SDL_DISABLE);
+                    }
+                    else
+                    {
+                        currentStatus = STATUS_DSTPTR;
+                    }
+                    invalidatePointList = true;
+                    invalidateColoredPointList = true;
+                }
+                break;
+            case STATUS_DSTPTR:
+                if (pointPairs->back().second != NULL)
+                {
+                    pointPairs->back().second = NULL;
+                    currentStatus = STATUS_SRCPTR;
+                    invalidatePointList = true;
+                    invalidateColoredPointList = true;
+                }
+                break;
+            case STATUS_VISUALIZE:
+                currentStatus = STATUS_AIM;
+                pointPairs->clear();
+                for (const auto &curve : scene->curves)
+                {
+                    delete curve;
+                }
+                scene->curves.clear();
+                for (const auto &path : cost->paths)
+                {
+                    delete path;
+                }
+                testLightpaths.clear();
+                straightLightpaths.clear();
+                cost->paths.clear();
+                invalidatePointList = true;
+                invalidateColoredPointList = true;
+                delete testMedium;
+                testMedium = new TestModel(3, 1, 0.1, 1, 3, 0.1, 1, 10);
+                break;
+            }
+            break;
+        case SDLK_r:
+            if (currentStatus == STATUS_VISUALIZE)
+            {
+                visRefraction = !visRefraction;
+            }
+            break;
+        case SDLK_f:
+            camera = fixCam;
+            break;
+        case SDLK_1:
+            visCurve = !visCurve;
+            break;
+        case SDLK_2:
+            visPoint = !visPoint;
+            break;
+        case SDLK_RETURN:
+            if (currentStatus == STATUS_DSTPTR && pointPairs->back().second != NULL)
+            {
+                camera = fixCam;
+                currentStatus = STATUS_VISUALIZE;
+                SDL_ShowCursor(SDL_DISABLE);
                 // Optimize!
                 if (invalidatePointList)
                 {
                     cost->paths.clear();
                     for (const auto &pair : *pointPairs)
                     {
-                        std::cout << "[(" << pair.first->x << ", " << pair.first->y << ", " << pair.first->z << "), (" <<
+                        std::cout << "Point locations: [(" << pair.first->x << ", " << pair.first->y << ", " << pair.first->z << "), (" <<
                             pair.second->x << ", " << pair.second->y << ", " << pair.second->z << ")]" << std::endl;
-                        glm::dvec3 normalized = glm::normalize(*pair.first - camera->position);
+                        std::cout << "Camera location: [origin=(" << camera.position.x << ", " << camera.position.y << ", " << camera.position.z << "), target=(" <<
+                            camera.direction.x + camera.position.x << ", " << camera.direction.y + camera.position.y << ", " << camera.direction.z + camera.position.z << "), up=(" <<
+                            camera.up.x << ", " << camera.up.y << ", " << camera.up.z << ")]" << std::endl;
+                        glm::dvec3 normalized = glm::normalize(*pair.first - camera.position);
 
-                        Lightpath *testLightpath = new Lightpath(linearMedium);
-                        testLightpath->solve2(0, 0.03, 50, camera->position, normalized);
+                        Lightpath *testLightpath = new Lightpath(testMedium);
+                        testLightpath->solve2(0, 0.03, 100, (glm::dvec3)camera.position + normalized * (double)camera.near, normalized);
                         testLightpath->setTargetPoint(*pair.second);
                         testLightpaths.push_back(testLightpath);
                         cost->paths.push_back(testLightpath);
 
                         Lightpath *straightLightpath = new Lightpath(constMedium);
-                        straightLightpath->solve2(0, 0.03, 50, camera->position, normalized);
+                        straightLightpath->solve2(0, 0.03, 100, camera.position, normalized);
                         straightLightpaths.push_back(straightLightpath);
 
                         std::vector<PosColorVertex> *vertices = new std::vector<PosColorVertex>();
                         const std::string *name = new std::string("Curve");
-                        straightLightpath->getCurveVertices(vertices);
+                        straightLightpath->getCurveVertices(vertices, 0.0, 0.8, 1);
                         Curve *curve = new Curve(name, vertices);
                         delete name;
                         curve->glInit();
                         scene->curves.push_back(curve);
                     }
+                    std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
                     Optimizer::optimize(cost);
+                    std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now();
+                    std::chrono::milliseconds diff = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+                    std::cout << diff.count() << "ms elapsed" << std::endl;
                     for (const auto &testLightpath : testLightpaths)
                     {
                         std::vector<PosColorVertex> *vertices = new std::vector<PosColorVertex>();
-                        testLightpath->getCurveVertices(vertices);
+                        testLightpath->getCurveVertices(vertices, 1, 0.8, 0.);
                         const std::string *name = new std::string("Curve");
                         Curve *curve = new Curve(name, vertices);
                         delete name;
                         curve->glInit();
                         scene->curves.push_back(curve);
+                        /*
+                        std::cout << "testMedium.f(x) logging:" << std::endl;
+                        for (int i = 0; i < 300; ++i)
+                        {
+                            std::cout << "alt = " << 0.1 * i << " unit, n = " << testMedium->f(glm::vec3(0, 0.1 * i, 0)) << std::endl;
+                        }*/
                     }
                     invalidatePointList = false;
                 }
@@ -290,14 +387,14 @@ public:
 
     bool getHitPoint(double xpos, double ypos, double width, double height, glm::vec3 *hitPointOut)
     {
-        glm::mat4 invProjMat = glm::inverse(camera->projectionMatrix);
-        glm::mat4 invMVMat = glm::inverse(camera->modelViewMatrix);
+        glm::mat4 invProjMat = glm::inverse(camera.projectionMatrix);
+        glm::mat4 invMVMat = glm::inverse(camera.modelViewMatrix);
         glm::vec4 onScreenVector = glm::vec4((2.0 * xpos) / width - 1.0f, 1.0f - (2.0 * ypos) / height, -1.f, 1.f);
         glm::vec4 rayView = invProjMat * onScreenVector;
         rayView = glm::vec4(rayView.x, rayView.y, -1.f, 0.f);
         glm::vec4 rayWorld = invMVMat * rayView;
         glm::vec3 rayWorld3 = glm::normalize(glm::vec3(rayWorld.x, rayWorld.y, rayWorld.z));
-        btVector3 orig = btVector3(camera->position.x, camera->position.y, camera->position.z);
+        btVector3 orig = btVector3(camera.position.x, camera.position.y, camera.position.z);
         btVector3 dir = btVector3(rayWorld3.x, rayWorld3.y, rayWorld3.z);
         btVector3 point = physInterface->rayPick(orig, dir);
         if (orig.x() == point.x() && orig.y() == point.y() && orig.z() == point.z())
@@ -325,31 +422,43 @@ public:
         double xpos, ypos;
         int x, y;
 
-        bool invalidateColoredPointList;
-
         /* Get mouse position */
         while (runLevel > 0)
         {
             invalidateColoredPointList = false;
 
-            SDL_PollEvent(&event);
-
-            if(event.type == SDL_QUIT)
+            while (SDL_PollEvent(&event))
             {
-                runLevel = 0;
-                break;
-            }
-            else if(event.type == SDL_KEYDOWN)
-            {
-                keyDown(event.key.keysym.sym);
-                if(runLevel < 1)
+                if (event.type == SDL_QUIT)
                 {
+                    runLevel = 0;
                     break;
                 }
-            }
-            else if(event.type == SDL_KEYUP)
-            {
-                keyUp(event.key.keysym.sym);
+                else if (event.type == SDL_KEYDOWN)
+                {
+                    keyDown(event.key.keysym.sym);
+                    if (event.key.keysym.mod & KMOD_SHIFT)
+                    {
+                        acceleration = 10.f;
+                    }
+                    else if (event.key.keysym.mod & KMOD_CTRL)
+                    {
+                        acceleration = 0.1f;
+                    }
+                    if (runLevel < 1)
+                    {
+                        break;
+                    }
+                }
+                else if (event.type == SDL_KEYUP)
+                {
+                    keyUp(event.key.keysym.sym);
+                    if (event.key.keysym.mod & KMOD_SHIFT ||
+                        event.key.keysym.mod & KMOD_CTRL)
+                    {
+                        acceleration = 1.f;
+                    }
+                }
             }
 
             const Uint8 *keys = SDL_GetKeyboardState(NULL);
@@ -363,34 +472,35 @@ public:
             switch (currentStatus)
             {
             case STATUS_AIM:
+            case STATUS_VISUALIZE:
                 if (keys[SDL_SCANCODE_W])
                 {
-                    camera->moveForward(deltaTime * speed);
+                    camera.moveForward(deltaTime * speed * acceleration);
                 }
 
                 if (keys[SDL_SCANCODE_S])
                 {
-                    camera->moveBackward(deltaTime * speed);
+                    camera.moveBackward(deltaTime * speed * acceleration);
                 }
 
                 if (keys[SDL_SCANCODE_D])
                 {
-                    camera->moveRight(deltaTime * speed);
+                    camera.moveRight(deltaTime * speed * acceleration);
                 }
 
                 if (keys[SDL_SCANCODE_A])
                 {
-                    camera->moveLeft(deltaTime * speed);
+                    camera.moveLeft(deltaTime * speed * acceleration);
                 }
 
                 if (keys[SDL_SCANCODE_E])
                 {
-                    camera->moveUpward(deltaTime * speed);
+                    camera.moveUpward(deltaTime * speed * acceleration);
                 }
 
                 if (keys[SDL_SCANCODE_Q])
                 {
-                    camera->moveDownward(deltaTime * speed);
+                    camera.moveDownward(deltaTime * speed * acceleration);
                 }
 
                 /* Ignore mouse input less than 2 pixels from origin (smoothing) */
@@ -410,13 +520,13 @@ public:
                 deltaTime = currentTime - lastTime;
                 lastTime = currentTime;
 
-                camera->aim(
+                camera.aim(
                     mouseSpeed * (floor(width / 2.0) - xpos),
                     mouseSpeed * (floor(height / 2.0) - ypos)
                     );
 
                 break;
-            case STATUS_POINT:
+            case STATUS_SRCPTR:
                 if (mouseButtonState & SDL_BUTTON(SDL_BUTTON_LEFT))
                 {
                     glm::vec3 *hitPoint = new glm::vec3();
@@ -435,7 +545,7 @@ public:
                     delete hitPoint;
                 }
                 break;
-            case STATUS_MOVE:
+            case STATUS_DSTPTR:
                 if (mouseButtonState & SDL_BUTTON(SDL_BUTTON_LEFT))
                 {
                     glm::vec3 *hitPoint = new glm::vec3();
@@ -465,7 +575,8 @@ public:
                         psv_1.position[0] = pointPair.first->x;
                         psv_1.position[1] = pointPair.first->y;
                         psv_1.position[2] = pointPair.first->z;
-                        HUSLtoRGB(&psv_1.color[0], &psv_1.color[1], &psv_1.color[2], 360.0 * pairIdx / pairNum, 100, 70);
+                        //HUSLtoRGB(&psv_1.color[0], &psv_1.color[1], &psv_1.color[2], 360.0 * pairIdx / pairNum, 100, 70);
+                        psv_1.color[0] = 0; psv_1.color[1] = 0.5; psv_1.color[2] = 1;
                         coloredPoints->push_back(psv_1);
                     }
                     if (pointPair.second != NULL)
@@ -473,14 +584,17 @@ public:
                         psv_2.position[0] = pointPair.second->x;
                         psv_2.position[1] = pointPair.second->y;
                         psv_2.position[2] = pointPair.second->z;
-                        HUSLtoRGB(&psv_2.color[0], &psv_2.color[1], &psv_2.color[2], 360.0 * pairIdx / pairNum, 100, 50);
+                        //HUSLtoRGB(&psv_2.color[0], &psv_2.color[1], &psv_2.color[2], 360.0 * pairIdx / pairNum, 100, 50);
+                        psv_2.color[0] = 1; psv_2.color[1] = 0.5; psv_2.color[2] = 0;
                         coloredPoints->push_back(psv_2);
                     }
                     pairIdx++;
                 }
                 scene->setPointsToBeShown(coloredPoints);
+                invalidateColoredPointList = false;
             }
 
+            /*
             if (keys[SDL_SCANCODE_N])
             {
                 btVector3 orig = btVector3(camera->position.x, camera->position.y, camera->position.z);
@@ -496,13 +610,13 @@ public:
                         << "Hit [" << point.x() << ", " << point.y() << ", " << point.z() << "]" << std::endl;
                 }
             }
-
-            camera->update();
+            */
+            camera.update();
 
             // Render frame
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            renderer.render(camera);
+            renderer.render(camera, visRefraction, visCurve, visPoint,testMedium);
             SDL_GL_SwapWindow(window);
         }
     }

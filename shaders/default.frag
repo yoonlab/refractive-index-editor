@@ -7,9 +7,11 @@ in vec3 Position_worldspace;
 in vec3 Normal_cameraspace;
 in vec3 EyeDirection_cameraspace;
 in vec3 LightDirection_cameraspace;
+in vec4 projPosition;
 
 // Ouput data
 out vec3 color;
+out vec4 depth;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D myTextureSampler;
@@ -23,10 +25,10 @@ void main(){
 	// Light emission properties
 	// You probably want to put them as uniforms
 	vec3 LightColor = vec3(1,1,1);
-	float LightPower = 50.0f;
+	float LightPower = 10.0f;
 
 	// Material properties
-	vec3 MaterialDiffuseColor = MaterialDiffuse + texture( myTextureSampler, UV ).rgb;
+	vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;
 	vec3 MaterialAmbientColor = MaterialAmbient + vec3(0.5,0.5,0.5) * MaterialDiffuseColor;
 	vec3 MaterialSpecularColor = MaterialSpecular;
 
@@ -56,9 +58,12 @@ void main(){
 
 	color = 
 		// Ambient : simulates indirect lighting
-		MaterialAmbientColor +
+		//MaterialAmbientColor;
+		// +
 		// Diffuse : "color" of the object
-		MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance) +
+		MaterialDiffuseColor;// * LightColor * LightPower * cosTheta / (distance*distance);// +
 		// Specular : reflective highlight, like a mirror
-		MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha, 5.0) / (distance*distance);
+		//MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha, 5.0) / (distance*distance);
+
+	depth = vec4(vec3(projPosition.z / projPosition.w), 1.0);
 }

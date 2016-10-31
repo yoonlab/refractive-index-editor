@@ -1,10 +1,10 @@
 #include "Frustum.h"
 
 
-void Frustum::extractFrustum(glm::mat4& modelViewMatrix, glm::mat4& projectionMatrix)
+void Frustum::extractFrustum(const glm::mat4& modelViewMatrix, const glm::mat4& projectionMatrix)
 {
-    float *modl = glm::value_ptr(modelViewMatrix);
-    float *proj = glm::value_ptr(projectionMatrix);
+    const float *modl = glm::value_ptr(modelViewMatrix);
+    const float *proj = glm::value_ptr(projectionMatrix);
 
     float   clip[16];
     float   t;

@@ -1,7 +1,10 @@
 #version 330 core
 
 layout (points) in;
-layout (triangle_strip, max_vertices = 4) out;
+layout (triangle_strip, max_vertices = 16) out;
+
+uniform mat4 ProjectionMatrix;
+uniform mat4 ViewMatrix;
 
 in vec4 gViewPosition[];
 in vec4 gColor[];
@@ -19,23 +22,95 @@ void main()
 {
     fViewPosition = gViewPosition[0];
     fColor = gColor[0];
-    vec4 halfBB = gBoundingBox[0] / 2.0;
-    
-    //Point C
-    gl_Position = gl_in[0].gl_Position + vec4(-1, -1, 1, 0) * halfBB;
-    EmitVertex();
+    vec4 halfBB = gBoundingBox[0] / 2.0 * (1.5 - gColor[0].g) * (1.5 - gColor[0].g);
+    vec4 normPos = gl_in[0].gl_Position / gl_in[0].gl_Position.w;
 
-    //Point A
-    gl_Position = gl_in[0].gl_Position + vec4(-1,  1, 1, 0) * halfBB;
-    EmitVertex();
+    if (gColor[0].r<0.1)
+    {
+        //Point C
+        gl_Position = normPos + vec4(-1, -1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0);
+        EmitVertex();
+        //Point A
+        gl_Position = normPos + vec4(-1,  1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0);
+        EmitVertex();
+        //Point D
+        gl_Position = normPos + vec4( 1, -1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0);
+        EmitVertex();
+        //Point B
+        gl_Position = normPos + vec4( 1,  1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0);
+        EmitVertex();
+        EndPrimitive();
 
-    //Point D
-    gl_Position = gl_in[0].gl_Position + vec4( 1, -1, 1, 0) * halfBB;
-    EmitVertex();
+        //Point C
+        gl_Position = normPos + vec4(-1, -1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0);
+        EmitVertex();
+        //Point A
+        gl_Position = normPos + vec4(-1,  1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0);
+        EmitVertex();
+        //Point D
+        gl_Position = normPos + vec4( 1, -1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0);
+        EmitVertex();
+        //Point B
+        gl_Position = normPos + vec4( 1,  1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0);
+        EmitVertex();
+        EndPrimitive();
+    }
+    else
+    {
+        //Point C
+        gl_Position = normPos + vec4(-1, -1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0) + vec4(-1, 0, 0, 0) * halfBB;
+        EmitVertex();
+        //Point A
+        gl_Position = normPos + vec4(-1,  1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0) + vec4(-1, 0, 0, 0) * halfBB;
+        EmitVertex();
+        //Point D
+        gl_Position = normPos + vec4( 1, -1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0) + vec4(-1, 0, 0, 0) * halfBB;
+        EmitVertex();
+        //Point B
+        gl_Position = normPos + vec4( 1,  1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0) + vec4(-1, 0, 0, 0) * halfBB;
+        EmitVertex();
+        EndPrimitive();
 
-    //Point B
-    gl_Position = gl_in[0].gl_Position + vec4( 1,  1, 1, 0) * halfBB;
-    EmitVertex();
+        //Point C
+        gl_Position = normPos + vec4(-1, -1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0) + vec4(1, 0, 0, 0) * halfBB;
+        EmitVertex();
+        //Point A
+        gl_Position = normPos + vec4(-1,  1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0) + vec4(1, 0, 0, 0) * halfBB;
+        EmitVertex();
+        //Point D
+        gl_Position = normPos + vec4( 1, -1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0) + vec4(1, 0, 0, 0) * halfBB;
+        EmitVertex();
+        //Point B
+        gl_Position = normPos + vec4( 1,  1, 1, 0) * halfBB * vec4(0.3, 1, 1, 0) + vec4(1, 0, 0, 0) * halfBB;
+        EmitVertex();
+        EndPrimitive();
 
-    EndPrimitive();
+        //Point C
+        gl_Position = normPos + vec4(-1, -1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0) + vec4(0, -1, 0, 0) * halfBB;
+        EmitVertex();
+        //Point A
+        gl_Position = normPos + vec4(-1,  1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0) + vec4(0, -1, 0, 0) * halfBB;
+        EmitVertex();
+        //Point D
+        gl_Position = normPos + vec4( 1, -1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0) + vec4(0, -1, 0, 0) * halfBB;
+        EmitVertex();
+        //Point B
+        gl_Position = normPos + vec4( 1,  1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0) + vec4(0, -1, 0, 0) * halfBB;
+        EmitVertex();
+        EndPrimitive();
+
+        //Point C
+        gl_Position = normPos + vec4(-1, -1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0) + vec4(0, 1, 0, 0) * halfBB;
+        EmitVertex();
+        //Point A
+        gl_Position = normPos + vec4(-1,  1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0) + vec4(0, 1, 0, 0) * halfBB;
+        EmitVertex();
+        //Point D
+        gl_Position = normPos + vec4( 1, -1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0) + vec4(0, 1, 0, 0) * halfBB;
+        EmitVertex();
+        //Point B
+        gl_Position = normPos + vec4( 1,  1, 1, 0) * halfBB * vec4(1, 0.3, 1, 0) + vec4(0, 1, 0, 0) * halfBB;
+        EmitVertex();
+        EndPrimitive();
+    }
 }

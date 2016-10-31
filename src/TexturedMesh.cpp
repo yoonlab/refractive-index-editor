@@ -100,6 +100,6 @@ void TexturedMesh::glInit()
 void TexturedMesh::draw()
 {
     bindBuffers();
-    glDrawArrays(primitiveMode, 0, vertexData.size());
+    glDrawElements(primitiveMode, indices.size(), GL_UNSIGNED_INT, nullptr);
     unbindBuffers();
 }

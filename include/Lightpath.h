@@ -15,7 +15,7 @@ public:
     void solve2();
     double dist(glm::dvec3 p);
     double distToTarget();
-    void getCurveVertices(std::vector<PosColorVertex> *verticesOut);
+    void getCurveVertices(std::vector<PosColorVertex> *verticesOut, float r, float g, float b);
     void setTargetPoint(glm::dvec3 p) { targetPoint = glm::dvec3(p); }
     Medium *getMediumPtr() { return pMedium; }
 
@@ -24,7 +24,7 @@ protected:
 
     double s_0, step, s_max;
     glm::dvec3 x_0, v_0;
-    std::vector<std::pair<double, glm::dvec3>> path;
+    std::vector<std::tuple<double, glm::dvec3, glm::dvec3>> path;
     Medium *pMedium;
     glm::dvec3 targetPoint;
 };

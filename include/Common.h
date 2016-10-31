@@ -1,7 +1,6 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#define _DEBUG 0
 #define GLEW_STATIC 1
 
 #include <GL/glew.h>

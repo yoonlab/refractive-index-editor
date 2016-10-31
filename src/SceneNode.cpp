@@ -9,6 +9,14 @@ SceneNode::SceneNode()
 }
 
 SceneNode::SceneNode(const std::string * name,
+    GLenum primitiveMode)
+    : SceneNode()
+{
+    this->name = std::string(*name);
+    this->primitiveMode = primitiveMode;
+}
+
+SceneNode::SceneNode(const std::string * name,
     GLenum primitiveMode,
     glm::mat4 * modelViewMatrix)
     : SceneNode()

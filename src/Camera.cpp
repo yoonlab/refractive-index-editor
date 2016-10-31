@@ -5,7 +5,7 @@ Camera::Camera()
     // get viewport
     GLint mViewport[4];
     glGetIntegerv( GL_VIEWPORT, mViewport );
-    projectionMatrix = glm::perspective(45.0f, (float)mViewport[2] /(float) mViewport[3], 0.1f, 10000.0f);
+    projectionMatrix = glm::perspective(45.0f, (float)mViewport[2] /(float) mViewport[3], near, 10000.0f);
     horizontalAngle = M_PI; //3.1415926539
     verticalAngle = 0.0;
     position = glm::vec3(0.0, 1.0, 0.0);

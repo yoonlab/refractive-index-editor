@@ -21,6 +21,7 @@ public:
     glm::vec3 up;
     double horizontalAngle;
     double verticalAngle;
+    float near = 0.1f;
 
     void aim(double x, double y);
     void moveForward(double amount);

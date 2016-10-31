@@ -7,12 +7,13 @@
 class GpuProgram
 {
 public:
-    GpuProgram();
+    GpuProgram(std::string &vSrc, std::string &fSrc);
+    GpuProgram(std::string &vSrc, std::string &fSrc, std::string &gSrc);
     ~GpuProgram();
     GLuint getId();
-    void attachShader(Shader& _shader);
     void use();
 private:
+    void checkError();
     GLuint id;
 };
 
