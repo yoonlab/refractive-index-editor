@@ -213,12 +213,16 @@ void Scene::addWavefront(const char * fileName, glm::mat4 modelMat)
 
             if ((shapes[i].mesh.indices[j] * 2) >= shapes[i].mesh.texcoords.size())
             {
-                std::cerr << "Unable to put texcoord in " << shapes[i].name << std::endl;
-                return;
+                //std::cerr << "Unable to put texcoord in " << shapes[i].name << std::endl;
+                v.textureCoordinate[0] = 0;
+                v.textureCoordinate[1] = 0;
             }
-            tinyobj::mesh_t* m = &shapes[i].mesh;
-            v.textureCoordinate[0] = m->texcoords[(int)m->indices[j] * 2];
-            v.textureCoordinate[1] = 1 - m->texcoords[(int)m->indices[j] * 2 + 1]; // Account for wavefront to opengl coordinate system conversion
+            else
+            {
+                tinyobj::mesh_t* m = &shapes[i].mesh;
+                v.textureCoordinate[0] = m->texcoords[(int)m->indices[j] * 2];
+                v.textureCoordinate[1] = 1 - m->texcoords[(int)m->indices[j] * 2 + 1]; // Account for wavefront to opengl coordinate system conversion
+            }
 
             mVertexData.push_back(v);
             if (j == shapes[i].mesh.indices.size() - 1)
