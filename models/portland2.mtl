@@ -2966,7 +2966,7 @@ Ks 0.009018 0.009018 0.009018
 Ni 1.000000
 d 1.000000
 illum 2
-map_Kd PortlandAriel.png
+map_Kd PortlandArielHiRes.png
 
 newmtl Roof.001
 Ns 92.156863
