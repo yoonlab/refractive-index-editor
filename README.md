@@ -1,6 +1,6 @@
 # Refractive Index Editor
 
-This project have been forked from the opensource project [sdlgl-wavefront](https://github.com/monguri/sdlgl3-wavefront).
+This project have been forked from the opensource project [sdlgl-wavefront](https://github.com/chrisliebert/sdlgl3-wavefront).
 
 ## Build instructions
 
