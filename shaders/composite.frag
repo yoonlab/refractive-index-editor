@@ -23,7 +23,7 @@ in vec2 texCoord;
 // Ouput data
 out vec3 color;
 
-float maxStep = 100;
+float maxStep = 1000;
 float stepDelta = 1;
 
 vec3 d = vec3(0, 1, 0);

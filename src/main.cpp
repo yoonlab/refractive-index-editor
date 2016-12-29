@@ -340,13 +340,13 @@ public:
                         glm::dvec3 normalized = glm::normalize(*pair.first - camera.position);
 
                         Lightpath *testLightpath = new Lightpath(testMedium);
-                        testLightpath->solve2(0, 0.03, 100, (glm::dvec3)camera.position + normalized * (double)camera.near, normalized);
+                        testLightpath->solve2(0, 0.3, 1000, (glm::dvec3)camera.position + normalized * (double)camera.near, normalized);
                         testLightpath->setTargetPoint(*pair.second);
                         testLightpaths.push_back(testLightpath);
                         cost->paths.push_back(testLightpath);
 
                         Lightpath *straightLightpath = new Lightpath(constMedium);
-                        straightLightpath->solve2(0, 0.03, 100, camera.position, normalized);
+                        straightLightpath->solve2(0, 0.3, 1000, camera.position, normalized);
                         straightLightpaths.push_back(straightLightpath);
 
                         std::vector<PosColorVertex> *vertices = new std::vector<PosColorVertex>();
