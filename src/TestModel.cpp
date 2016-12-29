@@ -8,27 +8,35 @@ TestModel::TestModel(double bgn, double bgf, double idn, double ia,
     hotspotN(hsn), hotspotDropoff(hsd), scale(_scale)
 {
     args.push_back(&backgroundMaxN);
+    _arg_init.push_back(backgroundMaxN);
     _arg_max.push_back(1e100);
     _arg_min.push_back(0);
     args.push_back(&backgroundFlatness);
+    _arg_init.push_back(backgroundFlatness);
     _arg_max.push_back(1e100);
     _arg_min.push_back(1e-6);
     args.push_back(&inversionDeltaN);
+    _arg_init.push_back(inversionDeltaN);
     _arg_max.push_back(1e10);
     _arg_min.push_back(0);
     args.push_back(&inversionA);
+    _arg_init.push_back(inversionA);
     _arg_max.push_back(1e10);
     _arg_min.push_back(1e-6);
     args.push_back(&inversionHciso);
+    _arg_init.push_back(inversionHciso);
     _arg_max.push_back(1e100);
     _arg_min.push_back(0);
     args.push_back(&hotspotN);
+    _arg_init.push_back(hotspotN);
     _arg_max.push_back(1e10);
     _arg_min.push_back(0);
     args.push_back(&hotspotDropoff);
+    _arg_init.push_back(hotspotDropoff);
     _arg_max.push_back(1e10);
     _arg_min.push_back(1e-6);
     args.push_back(&scale);
+    _arg_init.push_back(scale);
     _arg_max.push_back(1e100);
     _arg_min.push_back(1e-6);
 }
@@ -74,6 +82,14 @@ std::vector<double> *TestModel::arg_max()
 std::vector<double> *TestModel::arg_min()
 {
     return &_arg_min;
+}
+
+void TestModel::reinitialize()
+{
+    for (int i = 0; i < _arg_init.size(); ++i)
+    {
+        *args[i] = _arg_init[i];
+    }
 }
 
 inline double TestModel::logistic(const double &L, const double &invK, 

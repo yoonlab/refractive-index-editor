@@ -16,6 +16,8 @@ public:
     std::vector<double> *arg_max();
     std::vector<double> *arg_min();
 
+    void reinitialize();
+
 protected:
     // L/(1+exp(-(x-xNaught)/invK))
     inline double logistic(const double &L, const double &invK, 
@@ -46,4 +48,5 @@ protected:
     std::vector<double *> args;
     std::vector<double> _arg_max;
     std::vector<double> _arg_min;
+    std::vector<double> _arg_init;
 };

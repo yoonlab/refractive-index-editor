@@ -329,6 +329,7 @@ public:
                 // Optimize!
                 if (invalidatePointList)
                 {
+                    testMedium->reinitialize();
                     cost->paths.clear();
                     for (const auto &pair : *pointPairs)
                     {
